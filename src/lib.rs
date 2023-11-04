@@ -2,7 +2,6 @@
 
 pub mod gameplay;
 pub mod geometry;
-pub mod rendering;
 
 /*
 

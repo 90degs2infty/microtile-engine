@@ -1,3 +1,7 @@
+use array_init::array_init;
+
+use super::raster::Rasterization;
+
 pub enum Angle {
     /// 0° in counter-clockwise order
     Zero,
@@ -167,5 +171,14 @@ impl<T> Displacee for DisplacedTile<T> {
             displ_x: self.displ_x + x,
             displ_y: self.displ_y + y,
         }
+    }
+}
+
+impl<const M: usize, const N: usize, T> Rasterization<M, N> for T
+where
+    T: Set,
+{
+    fn rasterize(&self) -> [[bool; N]; M] {
+        array_init(|r| array_init(|c| self.contains(c as i32, r as i32)))
     }
 }
