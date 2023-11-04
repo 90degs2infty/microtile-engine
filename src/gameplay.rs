@@ -1,5 +1,5 @@
 use crate::geometry::{
-    board::Board,
+    board::{Board, ProcessesRows as BoardProcesses, TakesTile},
     tile::{BasicTile, DisplacedTile, RotatedTile},
 };
 
@@ -12,7 +12,7 @@ mod sealed {
 pub trait State: sealed::Seal {}
 
 pub struct TileNeeded {
-    _board: Board,
+    _board: Board<TakesTile>,
 }
 
 impl sealed::Seal for TileNeeded {}
@@ -35,21 +35,21 @@ impl Default for TileNeeded {
 
 pub struct TileFloating {
     _tile: DisplacedTile<RotatedTile<BasicTile>>,
-    _board: Board,
+    _board: Board<TakesTile>,
 }
 
 impl sealed::Seal for TileFloating {}
 impl State for TileFloating {}
 
 pub struct ProcessRows {
-    _board: Board,
+    _board: Board<BoardProcesses>,
 }
 
 impl sealed::Seal for ProcessRows {}
 impl State for ProcessRows {}
 
 pub struct Over {
-    _board: Board,
+    _board: Board<TakesTile>,
 }
 
 impl sealed::Seal for Over {}
