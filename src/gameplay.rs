@@ -41,7 +41,7 @@ where
     T: State,
 {
     _tile: T::Tile,
-    _board: Board<M, N>,
+    _board: Board,
 }
 
 impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
@@ -49,7 +49,7 @@ impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
     pub fn new() -> Self {
         Self {
             _tile: (),
-            _board: [[false; N]; M],
+            _board: Board::default(),
         }
     }
 
