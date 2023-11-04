@@ -5,58 +5,72 @@ use crate::geometry::{
 
 use either::Either;
 
-pub struct TileNeeded {}
-
-pub struct TileFloating {}
-
-pub struct Over {}
-
-// TODO maybe const generic activeRow: usize
-pub struct ProcessRows {}
-
-// TODO trait sealing
-
-pub trait State {
-    type Tile;
+mod sealed {
+    pub trait Seal {}
 }
 
-impl State for TileNeeded {
-    type Tile = ();
-}
+pub trait State: sealed::Seal {}
 
-impl State for TileFloating {
-    type Tile = DisplacedTile<RotatedTile<BasicTile>>;
-}
-
-impl State for Over {
-    type Tile = ();
-}
-
-impl State for ProcessRows {
-    type Tile = ();
-}
-
-pub struct Game<T, const M: usize, const N: usize>
-where
-    T: State,
-{
-    _tile: T::Tile,
+pub struct TileNeeded {
     _board: Board,
+}
+
+impl sealed::Seal for TileNeeded {}
+impl State for TileNeeded {}
+
+impl TileNeeded {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            _board: Board::default(),
+        }
+    }
+}
+
+impl Default for TileNeeded {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct TileFloating {
+    _tile: DisplacedTile<RotatedTile<BasicTile>>,
+    _board: Board,
+}
+
+impl sealed::Seal for TileFloating {}
+impl State for TileFloating {}
+
+pub struct ProcessRows {
+    _board: Board,
+}
+
+impl sealed::Seal for ProcessRows {}
+impl State for ProcessRows {}
+
+pub struct Over {
+    _board: Board,
+}
+
+impl sealed::Seal for Over {}
+impl State for Over {}
+
+pub struct Game<S, const M: usize, const N: usize> {
+    _s: S,
 }
 
 impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            _tile: (),
-            _board: Board::default(),
+            _s: TileNeeded::default(),
         }
     }
 
     #[must_use]
     pub fn place_tile(
         self,
-        _tile: <TileFloating as State>::Tile,
+        _tile: BasicTile,
     ) -> Either<Game<TileFloating, M, N>, Game<Over, M, N>> {
         todo!("To be implemented")
     }
