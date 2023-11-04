@@ -1,4 +1,7 @@
-use super::raster::Rasterization;
+use crate::{
+    geometry::raster::Rasterization,
+    rendering::{Active, Passive, Rendering},
+};
 use array_init::array_init;
 use core::result::Result;
 use either::Either;
@@ -81,9 +84,27 @@ impl Default for Board<TakesTile> {
     }
 }
 
+impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<TakesTile> {
+    fn render_buf(&self, _buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        todo!()
+    }
+}
+
 impl Board<ProcessesRows> {
     #[must_use]
     pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
+        todo!()
+    }
+}
+
+impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<ProcessesRows> {
+    fn render_buf(&self, _buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        todo!()
+    }
+}
+
+impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Board<ProcessesRows> {
+    fn render_buf(&self, _buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
         todo!()
     }
 }
