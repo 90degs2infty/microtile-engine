@@ -49,11 +49,11 @@ impl<T> DisplacedTile<T> {
     }
 }
 
-pub trait Set {
+pub trait Discrete2DSet {
     fn contains(&self, x: i32, y: i32) -> bool;
 }
 
-impl Set for BasicTile {
+impl Discrete2DSet for BasicTile {
     fn contains(&self, x: i32, y: i32) -> bool {
         match self {
             BasicTile::Square => x == 0 && y == 0,
@@ -63,9 +63,9 @@ impl Set for BasicTile {
     }
 }
 
-impl<T> Set for RotatedTile<T>
+impl<T> Discrete2DSet for RotatedTile<T>
 where
-    T: Set,
+    T: Discrete2DSet,
 {
     fn contains(&self, x: i32, y: i32) -> bool {
         match self.a {
@@ -77,9 +77,9 @@ where
     }
 }
 
-impl<T> Set for DisplacedTile<T>
+impl<T> Discrete2DSet for DisplacedTile<T>
 where
-    T: Set,
+    T: Discrete2DSet,
 {
     fn contains(&self, x: i32, y: i32) -> bool {
         self.t.contains(x - self.displ_x, y - self.displ_y)
@@ -176,7 +176,7 @@ impl<T> Displacee for DisplacedTile<T> {
 
 impl<const M: usize, const N: usize, T> Rasterization<M, N> for T
 where
-    T: Set,
+    T: Discrete2DSet,
 {
     fn rasterize(&self) -> [[bool; N]; M] {
         array_init(|r| array_init(|c| self.contains(c as i32, r as i32)))
