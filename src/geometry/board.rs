@@ -189,3 +189,52 @@ impl<S> Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }> for Board<S> {
         todo!()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn process_rows() {
+        let initial_grid = [
+            [true; BOARD_COLS + 2],
+            [true, false, true, false, true, false, true],
+            [true; BOARD_COLS + 2],
+            [true, true, false, true, false, true, true],
+            [true; BOARD_COLS + 2],
+            [true, false, false, false, false, false, true],
+            [true; BOARD_COLS + 2],
+        ];
+
+        let final_grid = [
+            [true; BOARD_COLS + 2],
+            [true, false, true, false, true, false, true],
+            [true, true, false, true, false, true, true],
+            [true, false, false, false, false, false, true],
+            [true, false, false, false, false, false, true],
+            [true, false, false, false, false, false, true],
+            [true; BOARD_COLS + 2],
+        ];
+
+        let mut board = Board::<ProcessesRows> {
+            state: ProcessesRows::default(),
+            grid: initial_grid,
+        };
+
+        // Processing all rows takes BOARD_ROWS + 2 iterations (two rows are fully) populated.
+        // The last call to `process` will produce an Either::right value
+        for iter in 1..=(BOARD_ROWS + 2) {
+            board = match board.process_row() {
+                Either::Left(board) => board,
+                _ => panic!("Board failed to continue processing after iteration {iter}"),
+            };
+        }
+
+        let board = match board.process_row() {
+            Either::Right(board) => board,
+            _ => panic!("Board did not detect end of processing"),
+        };
+
+        assert_eq!(board.grid, final_grid)
+    }
+}
