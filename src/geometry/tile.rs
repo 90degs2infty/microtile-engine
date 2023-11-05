@@ -174,6 +174,21 @@ impl<T> Displacee for DisplacedTile<T> {
     }
 }
 
+pub trait Dimensionee {
+    /// (width, height)
+    fn dimensions(&self) -> (usize, usize);
+}
+
+impl Dimensionee for BasicTile {
+    fn dimensions(&self) -> (usize, usize) {
+        match self {
+            BasicTile::Square => (1, 1),
+            BasicTile::Line => (2, 2),
+            BasicTile::Diagonal => (1, 2),
+        }
+    }
+}
+
 impl<const M: usize, const N: usize, T> Rasterization<M, N> for T
 where
     T: Discrete2DSet,
