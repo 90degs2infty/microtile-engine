@@ -51,6 +51,14 @@ impl<T> DisplacedTile<T> {
             displ_y: 0,
         }
     }
+
+    pub fn displ_x(&self) -> &i32 {
+        &self.displ_x
+    }
+
+    pub fn displ_y(&self) -> &i32 {
+        &self.displ_y
+    }
 }
 
 pub trait Discrete2DSet {
