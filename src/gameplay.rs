@@ -71,14 +71,14 @@ impl sealed::Seal for Over {}
 impl State for Over {}
 
 pub struct Game<S, const M: usize, const N: usize> {
-    _s: S,
+    s: S,
 }
 
 impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            _s: TileNeeded::default(),
+            s: TileNeeded::default(),
         }
     }
 
