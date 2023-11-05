@@ -173,8 +173,14 @@ impl Board<ProcessesRows> {
 }
 
 impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<ProcessesRows> {
-    fn render_buf(&self, _buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        todo!()
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        buffer
+            .iter_mut()
+            .enumerate()
+            .filter(|(idx, _)| *idx + 1 != self.state.current) // current acts as if 1-indexed
+            .for_each(|(idx, row)| row.copy_from_slice(&self.grid[idx][1..=5]));
+
+        buffer[self.state.current - 1] = [false; BOARD_COLS];
     }
 }
 
