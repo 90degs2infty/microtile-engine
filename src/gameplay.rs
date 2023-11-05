@@ -12,7 +12,7 @@ mod sealed {
 pub trait State: sealed::Seal {}
 
 pub struct TileNeeded {
-    _board: Board<TakesTile>,
+    board: Board<TakesTile>,
 }
 
 impl sealed::Seal for TileNeeded {}
@@ -22,7 +22,7 @@ impl TileNeeded {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            _board: Board::default(),
+            board: Board::default(),
         }
     }
 }
