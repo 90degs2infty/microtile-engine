@@ -80,19 +80,42 @@ impl Board<TakesTile> {
             .all(|b| b)
     }
 
-    pub fn freeze_tile<T>(self, _tile: &T) -> Result<Board<TakesTile>, BoardError>
+    /// # Errors
+    ///
+    /// Returns [`BoardError::InvalidPosition`] iff the specified tile overlaps with occupied
+    /// cells.
+    pub fn freeze_tile<T>(self, tile: &T) -> Result<Board<ProcessesRows>, BoardError>
     where
         T: Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }>,
     {
-        todo!()
+        if !self.is_position_valid(tile) {
+            return Err(BoardError::InvalidPosition);
+        }
+
+        Ok(self.freeze_tile_assume_valid(tile))
     }
 
+    /// # Panics
+    ///
+    /// TBD
     #[must_use]
-    pub fn freeze_tile_assume_valid<T>(self, _tile: &T) -> Board<TakesTile>
+    pub fn freeze_tile_assume_valid<T>(self, tile: &T) -> Board<ProcessesRows>
     where
         T: Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }>,
     {
-        todo!()
+        let raster = tile.rasterize();
+
+        let rows = zip(raster, self.grid).map(|(a, b)| {
+            let row = zip(a, b).map(|(a, b)| a || b);
+            from_iter(row).unwrap()
+        });
+
+        let grid = from_iter(rows).unwrap();
+
+        Board {
+            state: ProcessesRows::default(),
+            grid,
+        }
     }
 }
 
