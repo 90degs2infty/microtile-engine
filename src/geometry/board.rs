@@ -185,8 +185,10 @@ impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<ProcessesRows> {
 }
 
 impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Board<ProcessesRows> {
-    fn render_buf(&self, _buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        todo!()
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        *buffer = [[false; BOARD_COLS]; BOARD_ROWS];
+
+        buffer[self.state.current - 1].copy_from_slice(&self.grid[self.state.current][1..=5]);
     }
 }
 
