@@ -137,6 +137,13 @@ impl Game<TileFloating> {
 impl Game<ProcessRows> {
     #[must_use]
     pub fn process_row(self) -> Either<Game<ProcessRows>, Game<TileNeeded>> {
-        todo!()
+        match self.s.board.process_row() {
+            Either::Left(board) => Either::Left(Game {
+                s: ProcessRows::new(board),
+            }),
+            Either::Right(board) => Either::Right(Game {
+                s: TileNeeded::new(board),
+            }),
+        }
     }
 }
