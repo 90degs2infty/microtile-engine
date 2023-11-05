@@ -58,7 +58,13 @@ impl sealed::Seal for ProcessRows {}
 impl State for ProcessRows {}
 
 pub struct Over {
-    _board: Board<TakesTile>,
+    board: Board<TakesTile>,
+}
+
+impl Over {
+    fn new(board: Board<TakesTile>) -> Self {
+        Self { board }
+    }
 }
 
 impl sealed::Seal for Over {}
