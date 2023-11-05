@@ -48,8 +48,8 @@ pub enum BoardError {
 }
 
 pub struct Board<S> {
-    _state: S,
-    _grid: [[bool; BOARD_COLS + 2]; BOARD_ROWS + 2], // row major encoding
+    state: S,
+    grid: [[bool; BOARD_COLS + 2]; BOARD_ROWS + 2], // row major encoding
 }
 
 impl Board<TakesTile> {
@@ -63,8 +63,8 @@ impl Board<TakesTile> {
             }
         });
         Self {
-            _state: TakesTile {},
-            _grid: rim,
+            state: TakesTile {},
+            grid: rim,
         }
     }
 
