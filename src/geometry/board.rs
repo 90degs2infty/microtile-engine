@@ -127,8 +127,11 @@ impl Default for Board<TakesTile> {
 }
 
 impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<TakesTile> {
-    fn render_buf(&self, _buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        todo!()
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        buffer
+            .iter_mut()
+            .enumerate()
+            .for_each(|(idx, row)| row.copy_from_slice(&self.grid[idx][1..=5]));
     }
 }
 
