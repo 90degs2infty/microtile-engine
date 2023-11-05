@@ -20,16 +20,14 @@ impl State for TileNeeded {}
 
 impl TileNeeded {
     #[must_use]
-    pub fn new() -> Self {
-        Self {
-            board: Board::default(),
-        }
+    fn new(board: Board<TakesTile>) -> Self {
+        Self { board }
     }
 }
 
 impl Default for TileNeeded {
     fn default() -> Self {
-        Self::new()
+        Self::new(Board::default())
     }
 }
 
