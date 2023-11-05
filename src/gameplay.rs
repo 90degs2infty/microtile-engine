@@ -34,8 +34,17 @@ impl Default for TileNeeded {
 }
 
 pub struct TileFloating {
-    _tile: DisplacedTile<RotatedTile<BasicTile>>,
-    _board: Board<TakesTile>,
+    tile: DisplacedTile<RotatedTile<BasicTile>>,
+    board: Board<TakesTile>,
+}
+
+impl TileFloating {
+    fn new(tile: BasicTile, board: Board<TakesTile>) -> Self {
+        Self {
+            tile: DisplacedTile::new(RotatedTile::new(tile)),
+            board,
+        }
+    }
 }
 
 impl sealed::Seal for TileFloating {}
