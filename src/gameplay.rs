@@ -112,7 +112,7 @@ impl Default for Game<TileNeeded> {
 impl Game<TileFloating> {
     #[must_use]
     pub fn descend_tile(self) -> Either<Game<TileFloating>, Game<ProcessRows>> {
-        let candidate = self.s.tile.clone().displace_by(-1, 0);
+        let candidate = self.s.tile.clone().displace_by(0, -1);
 
         if self.s.board.is_position_valid(&candidate) {
             Either::Left(Game {
