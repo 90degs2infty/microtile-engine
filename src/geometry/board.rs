@@ -194,7 +194,7 @@ impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Board<ProcessesRows> {
 
 impl<S> Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }> for Board<S> {
     fn rasterize(&self) -> [[bool; BOARD_ROWS + 2]; BOARD_COLS + 2] {
-        todo!()
+        self.grid
     }
 }
 
