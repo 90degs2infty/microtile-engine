@@ -67,11 +67,11 @@ impl Over {
 impl sealed::Seal for Over {}
 impl State for Over {}
 
-pub struct Game<S, const M: usize, const N: usize> {
+pub struct Game<S> {
     s: S,
 }
 
-impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
+impl Game<TileNeeded> {
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -80,7 +80,7 @@ impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
     }
 
     #[must_use]
-    pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating, M, N>, Game<Over, M, N>> {
+    pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating>, Game<Over>> {
         let (_, height) = tile.dimensions();
         let tile = DisplacedTile::new(RotatedTile::new(tile)).displace_by(
             (BOARD_COLS / 2).try_into().unwrap(),
@@ -98,16 +98,16 @@ impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
     }
 }
 
-impl<const M: usize, const N: usize> Default for Game<TileNeeded, M, N> {
+impl Default for Game<TileNeeded> {
     #[must_use]
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const M: usize, const N: usize> Game<TileFloating, M, N> {
+impl Game<TileFloating> {
     #[must_use]
-    pub fn descend_tile(self) -> Either<Game<TileFloating, M, N>, Game<ProcessRows, M, N>> {
+    pub fn descend_tile(self) -> Either<Game<TileFloating>, Game<ProcessRows>> {
         todo!()
     }
 
@@ -119,9 +119,9 @@ impl<const M: usize, const N: usize> Game<TileFloating, M, N> {
     }
 }
 
-impl<const M: usize, const N: usize> Game<ProcessRows, M, N> {
+impl Game<ProcessRows> {
     #[must_use]
-    pub fn process_row(self) -> Either<Game<ProcessRows, M, N>, Game<TileNeeded, M, N>> {
+    pub fn process_row(self) -> Either<Game<ProcessRows>, Game<TileNeeded>> {
         todo!()
     }
 }
