@@ -2,8 +2,8 @@ use crate::{
     geometry::raster::Rasterization,
     rendering::{Active, Passive, Rendering},
 };
-use array_init::array_init;
-use core::result::Result;
+use array_init::{array_init, from_iter};
+use core::{iter::zip, result::Result};
 use either::Either;
 
 // As of now, computations on const generics are not possible in a somewhat stable manner
@@ -24,9 +24,24 @@ pub struct TakesTile;
 impl sealed::Seal for TakesTile {}
 impl State for TakesTile {}
 
-pub struct ProcessesRows;
+pub struct ProcessesRows {
+    current: usize,
+}
+
+impl ProcessesRows {
+    fn new(current: usize) -> Self {
+        Self { current }
+    }
+}
+
 impl sealed::Seal for ProcessesRows {}
 impl State for ProcessesRows {}
+
+impl Default for ProcessesRows {
+    fn default() -> Self {
+        Self::new(1)
+    }
+}
 
 pub enum BoardError {
     InvalidPosition,
