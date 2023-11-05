@@ -1,6 +1,6 @@
 use crate::geometry::{
-    board::{Board, ProcessesRows as BoardProcesses, TakesTile},
-    tile::{BasicTile, DisplacedTile, RotatedTile},
+    board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
+    tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile},
 };
 
 use either::Either;
@@ -39,11 +39,8 @@ pub struct TileFloating {
 }
 
 impl TileFloating {
-    fn new(tile: BasicTile, board: Board<TakesTile>) -> Self {
-        Self {
-            tile: DisplacedTile::new(RotatedTile::new(tile)),
-            board,
-        }
+    fn new(tile: DisplacedTile<RotatedTile<BasicTile>>, board: Board<TakesTile>) -> Self {
+        Self { tile, board }
     }
 }
 
@@ -83,11 +80,21 @@ impl<const M: usize, const N: usize> Game<TileNeeded, M, N> {
     }
 
     #[must_use]
-    pub fn place_tile(
-        self,
-        _tile: BasicTile,
-    ) -> Either<Game<TileFloating, M, N>, Game<Over, M, N>> {
-        todo!("To be implemented")
+    pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating, M, N>, Game<Over, M, N>> {
+        let (_, height) = tile.dimensions();
+        let tile = DisplacedTile::new(RotatedTile::new(tile)).displace_by(
+            (BOARD_COLS / 2).try_into().unwrap(),
+            (BOARD_ROWS - height).try_into().unwrap(),
+        );
+        if self.s.board.is_position_valid(&tile) {
+            Either::Left(Game {
+                s: TileFloating::new(tile, self.s.board),
+            })
+        } else {
+            Either::Right(Game {
+                s: Over::new(self.s.board),
+            })
+        }
     }
 }
 
