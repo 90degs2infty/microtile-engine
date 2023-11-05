@@ -69,11 +69,15 @@ impl Board<TakesTile> {
     }
 
     #[must_use]
-    pub fn is_position_valid<T>(&self, _tile: &T) -> bool
+    pub fn is_position_valid<T>(&self, tile: &T) -> bool
     where
         T: Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }>,
     {
-        todo!()
+        let raster = tile.rasterize();
+
+        zip(raster, &self.grid)
+            .map(|(a, b)| zip(a, b).map(|(a, b)| a && *b).all(|b| b))
+            .all(|b| b)
     }
 
     pub fn freeze_tile<T>(self, _tile: &T) -> Result<Board<TakesTile>, BoardError>
