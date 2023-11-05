@@ -43,6 +43,7 @@ impl Default for ProcessesRows {
     }
 }
 
+#[derive(Debug)]
 pub enum BoardError {
     InvalidPosition,
 }
