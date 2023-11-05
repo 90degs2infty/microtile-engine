@@ -134,8 +134,38 @@ impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<TakesTile> {
 
 impl Board<ProcessesRows> {
     #[must_use]
-    pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
-        todo!()
+    pub fn process_row(mut self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
+        if self.state.current > BOARD_ROWS {
+            return Either::Right(Board {
+                state: TakesTile {},
+                grid: self.grid,
+            });
+        }
+
+        // Check current row for being fully populated
+        let fully_populated = self.grid[self.state.current].iter().all(|b| *b);
+
+        // Check next row
+        if !fully_populated {
+            return Either::Left(Board {
+                state: ProcessesRows::new(self.state.current + 1),
+                grid: self.grid,
+            });
+        }
+
+        // Move all rows by one and clear the topmost row
+        for r in self.state.current..BOARD_ROWS {
+            self.grid.copy_within((r + 1)..(r + 2), r);
+        }
+
+        self.grid[BOARD_ROWS] = array_init(|c| c == 0 || c == BOARD_COLS + 1);
+
+        let next_row = self.state.current;
+
+        Either::Left(Board {
+            state: ProcessesRows::new(next_row),
+            grid: self.grid,
+        })
     }
 }
 
