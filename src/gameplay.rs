@@ -48,7 +48,13 @@ impl sealed::Seal for TileFloating {}
 impl State for TileFloating {}
 
 pub struct ProcessRows {
-    _board: Board<BoardProcesses>,
+    board: Board<BoardProcesses>,
+}
+
+impl ProcessRows {
+    fn new(board: Board<BoardProcesses>) -> Self {
+        Self { board }
+    }
 }
 
 impl sealed::Seal for ProcessRows {}
@@ -108,7 +114,18 @@ impl Default for Game<TileNeeded> {
 impl Game<TileFloating> {
     #[must_use]
     pub fn descend_tile(self) -> Either<Game<TileFloating>, Game<ProcessRows>> {
-        todo!()
+        let candidate = self.s.tile.clone().displace_by(-1, 0);
+
+        if self.s.board.is_position_valid(&candidate) {
+            Either::Left(Game {
+                s: TileFloating::new(candidate, self.s.board),
+            })
+        } else {
+            let board = self.s.board.freeze_tile(self.s.tile).unwrap();
+            Either::Right(Game {
+                s: ProcessRows::new(board),
+            })
+        }
     }
 
     /// Tries to move the tile horizontally to `column`.
