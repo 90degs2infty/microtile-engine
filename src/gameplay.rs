@@ -1,7 +1,6 @@
 use crate::{
     geometry::{
         board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
-        raster::Rasterization,
         tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
     },
     rendering::{Active, Passive, Rendering},
