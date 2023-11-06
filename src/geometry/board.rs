@@ -3,7 +3,7 @@ use crate::{
     rendering::{Active, Passive, Rendering},
 };
 use array_init::{array_init, from_iter};
-use core::{iter::zip, result::Result};
+use core::{iter::zip, ops::Not, result::Result};
 use either::Either;
 
 // As of now, computations on const generics are not possible in a somewhat stable manner
@@ -77,8 +77,9 @@ impl Board<TakesTile> {
         let raster = tile.rasterize();
 
         zip(raster, &self.grid)
-            .map(|(a, b)| zip(a, b).map(|(a, b)| a && *b).all(|b| b))
-            .all(|b| b)
+            .map(|(a, b)| zip(a, b).map(|(a, b)| a && *b).any(|b| b))
+            .any(|b| b)
+            .not()
     }
 
     /// # Errors
