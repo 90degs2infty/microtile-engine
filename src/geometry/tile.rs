@@ -201,8 +201,8 @@ impl Dimensionee for BasicTile {
     fn dimensions(&self) -> (usize, usize) {
         match self {
             BasicTile::Square => (1, 1),
-            BasicTile::Line => (2, 2),
-            BasicTile::Diagonal => (1, 2),
+            BasicTile::Line => (1, 2),
+            BasicTile::Diagonal => (2, 2),
         }
     }
 }
