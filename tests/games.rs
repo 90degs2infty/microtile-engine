@@ -58,15 +58,24 @@ fn process_rows(mut game: Game<ProcessRows>, num_iter: usize) -> Result<Game<Til
     }
 }
 
-fn check_snapshot(game: &Game<ProcessRows>, expected: &[[bool; BOARD_COLS]; BOARD_ROWS]) {
+fn check_snapshot<T>(game: &Game<ProcessRows>, expected: &[[bool; BOARD_COLS]; BOARD_ROWS])
+where
+    Game<ProcessRows>: Rendering<BOARD_ROWS, BOARD_COLS, T>,
+{
     let mut render_buf = [[false; 5]; 5];
 
-    <Game<ProcessRows> as Rendering<BOARD_COLS, BOARD_ROWS, Passive>>::render_buf(
-        &game,
-        &mut render_buf,
-    );
+    <Game<ProcessRows> as Rendering<BOARD_COLS, BOARD_ROWS, T>>::render_buf(&game, &mut render_buf);
 
     assert_eq!(render_buf, *expected);
+}
+
+fn check_snapshots(
+    game: &Game<ProcessRows>,
+    active: &[[bool; BOARD_COLS]; BOARD_ROWS],
+    passive: &[[bool; BOARD_COLS]; BOARD_ROWS],
+) {
+    check_snapshot::<Active>(&game, &active);
+    check_snapshot::<Passive>(&game, &passive);
 }
 
 #[test]
@@ -93,13 +102,22 @@ fn game_one() -> Result<()> {
     ];
     tiles.reverse();
 
-    let mut snapshots = vec![[
-        [false; BOARD_COLS],
-        [true, true, false, false, false],
-        [false; BOARD_COLS],
-        [false; BOARD_COLS],
-        [false; BOARD_COLS],
-    ]];
+    let mut snapshots = vec![
+        [
+            [true, true, false, false, false],
+            [false; BOARD_COLS],
+            [false; BOARD_COLS],
+            [false; BOARD_COLS],
+            [false; BOARD_COLS],
+        ],
+        [
+            [true, true, false, true, true],
+            [false; BOARD_COLS],
+            [false; BOARD_COLS],
+            [false; BOARD_COLS],
+            [false; BOARD_COLS],
+        ],
+    ];
     snapshots.reverse();
 
     let game = Game::default();
@@ -110,8 +128,38 @@ fn game_one() -> Result<()> {
     game.move_tile_up_to(1);
     let game = push_tile_down(game, 3)?;
 
-    check_snapshot(&game, &snapshots.pop().unwrap());
-    let _game = process_rows(game, 5)?;
+    check_snapshot::<Active>(&game, &snapshots.pop().unwrap());
+    let game = process_rows(game, 5)?;
+
+    // Tile 2
+    let mut game = place_tile_continue(game, tiles.pop().unwrap())?;
+    game.rotate_tile();
+    game.move_tile_up_to(5);
+    let game = push_tile_down(game, 3)?;
+    check_snapshot::<Active>(&game, &snapshots.pop().unwrap());
+    let game = process_rows(game, 5)?;
+
+    // Tile diagonal
+    let game = place_tile_continue(game, BasicTile::Diagonal)?;
+    let game = push_tile_down(game, 3)?;
+
+    let active = [
+        [true; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+
+    let passive = [
+        [false; BOARD_COLS],
+        [false, false, false, true, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+    check_snapshots(&game, &active, &passive);
+    let game = process_rows(game, 6)?;
 
     Ok(())
 }
