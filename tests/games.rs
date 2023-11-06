@@ -140,9 +140,7 @@ fn game_one() -> Result<()> {
     let game = process_rows(game, 5)?;
 
     // Tile diagonal
-    let game = place_tile_continue(game, BasicTile::Diagonal)?;
-    let game = push_tile_down(game, 3)?;
-
+    let tile = BasicTile::Diagonal;
     let active = [
         [true; BOARD_COLS],
         [false; BOARD_COLS],
@@ -150,7 +148,6 @@ fn game_one() -> Result<()> {
         [false; BOARD_COLS],
         [false; BOARD_COLS],
     ];
-
     let passive = [
         [false; BOARD_COLS],
         [false, false, false, true, false],
@@ -158,8 +155,38 @@ fn game_one() -> Result<()> {
         [false; BOARD_COLS],
         [false; BOARD_COLS],
     ];
+
+    let game = place_tile_continue(game, tile)?;
+    let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 6)?;
+
+    // Tile square
+    let tile = BasicTile::Square;
+    let active = [
+        [false, false, true, true, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+    let passive = [
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+
+    let game = place_tile_continue(game, tile)?;
+    let game = descend_tile_no_processing(game)?;
+    let game = descend_tile_no_processing(game)?;
+    let game = descend_tile_no_processing(game)?;
+    let mut game = descend_tile_no_processing(game)?;
+    game.move_tile_up_to(5);
+    let game = push_tile_down(game, 0)?;
+    check_snapshots(&game, &active, &passive);
+    let game = process_rows(game, 5)?;
 
     Ok(())
 }
