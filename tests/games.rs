@@ -80,66 +80,57 @@ fn check_snapshots(
 
 #[test]
 fn game_one() -> Result<()> {
-    let mut tiles: Vec<BasicTile> = vec![
-        BasicTile::Line,
-        BasicTile::Line,
-        BasicTile::Diagonal,
-        BasicTile::Square,
-        BasicTile::Line,
-        BasicTile::Line,
-        BasicTile::Line,
-        BasicTile::Line,
-        BasicTile::Square,
-        BasicTile::Square,
-        BasicTile::Square,
-        BasicTile::Diagonal,
-        BasicTile::Line,
-        BasicTile::Square,
-        BasicTile::Line,
-        BasicTile::Line,
-        BasicTile::Line,
-        BasicTile::Line,
-    ];
-    tiles.reverse();
-
-    let mut snapshots = vec![
-        [
-            [true, true, false, false, false],
-            [false; BOARD_COLS],
-            [false; BOARD_COLS],
-            [false; BOARD_COLS],
-            [false; BOARD_COLS],
-        ],
-        [
-            [true, true, false, true, true],
-            [false; BOARD_COLS],
-            [false; BOARD_COLS],
-            [false; BOARD_COLS],
-            [false; BOARD_COLS],
-        ],
-    ];
-    snapshots.reverse();
-
     let game = Game::default();
 
-    let mut game = place_tile_continue(game, tiles.pop().unwrap())?;
+    // Tile 1 - Line
+    let tile = BasicTile::Line;
+    let active = [
+        [true, true, false, false, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+    let passive = [
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
 
+    let mut game = place_tile_continue(game, tile)?;
     game.rotate_tile();
     game.move_tile_up_to(1);
     let game = push_tile_down(game, 3)?;
-
-    check_snapshot::<Active>(&game, &snapshots.pop().unwrap());
+    check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 5)?;
 
-    // Tile 2
-    let mut game = place_tile_continue(game, tiles.pop().unwrap())?;
+    // Tile 2 - Line
+    let tile = BasicTile::Line;
+    let active = [
+        [true, true, false, true, true],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+    let passive = [
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+
+    let mut game = place_tile_continue(game, tile)?;
     game.rotate_tile();
     game.move_tile_up_to(5);
     let game = push_tile_down(game, 3)?;
-    check_snapshot::<Active>(&game, &snapshots.pop().unwrap());
+    check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 5)?;
 
-    // Tile diagonal
+    // Tile 3 - Diagonal
     let tile = BasicTile::Diagonal;
     let active = [
         [true; BOARD_COLS],
@@ -161,7 +152,7 @@ fn game_one() -> Result<()> {
     check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 6)?;
 
-    // Tile square
+    // Tile 4 - Square
     let tile = BasicTile::Square;
     let active = [
         [false, false, true, true, false],
@@ -188,7 +179,7 @@ fn game_one() -> Result<()> {
     check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 5)?;
 
-    // Tile line
+    // Tile 5 - Line
     let tile = BasicTile::Line;
     let active = [
         [true, true, true, true, false],
@@ -212,7 +203,7 @@ fn game_one() -> Result<()> {
     check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 5)?;
 
-    // Tile line
+    // Tile 6 - Line
     let tile = BasicTile::Line;
     let active = [
         [true, true, true, true, false],
@@ -236,7 +227,7 @@ fn game_one() -> Result<()> {
     check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 5)?;
 
-    // Tile Line
+    // Tile 7 - Line
     let tile = BasicTile::Line;
     let active = [
         [true, true, true, true, false],
