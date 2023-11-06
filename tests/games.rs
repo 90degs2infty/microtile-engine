@@ -1,10 +1,27 @@
 use anyhow::{bail, Ok, Result};
 use either::Either;
 use microtile_engine::{
-    gameplay::{Game, ProcessRows, TileFloating, TileNeeded},
-    geometry::{board::BOARD_COLS, tile::BasicTile},
-    rendering::Rendering,
+    gameplay::{Game, Over, ProcessRows, TileFloating, TileNeeded},
+    geometry::{
+        board::{BOARD_COLS, BOARD_ROWS},
+        tile::BasicTile,
+    },
+    rendering::{Active, Passive, Rendering},
 };
+
+fn place_tile_continue(game: Game<TileNeeded>, tile: BasicTile) -> Result<Game<TileFloating>> {
+    match game.place_tile(tile) {
+        Either::Left(game) => Ok(game),
+        Either::Right(_) => bail!("Game should not have ended by placing this tile"),
+    }
+}
+
+fn place_tile_over(game: Game<TileNeeded>, tile: BasicTile) -> Result<Game<Over>> {
+    match game.place_tile(tile) {
+        Either::Left(_) => bail!("Game should have ended by placing this tile"),
+        Either::Right(game) => Ok(game),
+    }
+}
 
 fn descend_tile_no_processing(game: Game<TileFloating>) -> Result<Game<TileFloating>> {
     match game.descend_tile() {
@@ -20,6 +37,13 @@ fn descend_tile_processing(game: Game<TileFloating>) -> Result<Game<ProcessRows>
     }
 }
 
+fn push_tile_down(mut game: Game<TileFloating>, num_steps: usize) -> Result<Game<ProcessRows>> {
+    for _ in 0..num_steps {
+        game = descend_tile_no_processing(game)?;
+    }
+    descend_tile_processing(game)
+}
+
 fn process_rows(mut game: Game<ProcessRows>, num_iter: usize) -> Result<Game<TileNeeded>> {
     for _ in 0..num_iter {
         game = match game.process_row() {
@@ -32,6 +56,17 @@ fn process_rows(mut game: Game<ProcessRows>, num_iter: usize) -> Result<Game<Til
         Either::Left(_) => bail!("Game did not leave `ProcessRows` state"),
         Either::Right(game) => Ok(game),
     }
+}
+
+fn check_snapshot(game: &Game<ProcessRows>, expected: &[[bool; BOARD_COLS]; BOARD_ROWS]) {
+    let mut render_buf = [[false; 5]; 5];
+
+    <Game<ProcessRows> as Rendering<BOARD_COLS, BOARD_ROWS, Passive>>::render_buf(
+        &game,
+        &mut render_buf,
+    );
+
+    assert_eq!(render_buf, *expected);
 }
 
 #[test]
@@ -67,27 +102,15 @@ fn game_one() -> Result<()> {
     ]];
     snapshots.reverse();
 
-    let mut render_buf = [[false; 5]; 5];
-
     let game = Game::default();
 
-    let mut game = match game.place_tile(tiles.pop().unwrap()) {
-        Either::Left(game) => game,
-        Either::Right(_) => bail!("Game should not have ended after first tile!"),
-    };
+    let mut game = place_tile_continue(game, tiles.pop().unwrap())?;
 
     game.rotate_tile();
+    game.move_tile_up_to(1);
+    let game = push_tile_down(game, 3)?;
 
-    game.render_buf(&mut render_buf);
-    let expected = snapshots.pop().unwrap();
-
-    assert_eq!(render_buf, expected);
-
-    let game = descend_tile_no_processing(game)?;
-    let game = descend_tile_no_processing(game)?;
-    let game = descend_tile_no_processing(game)?;
-    let game = descend_tile_processing(game)?;
-
+    check_snapshot(&game, &snapshots.pop().unwrap());
     let _game = process_rows(game, 5)?;
 
     Ok(())
