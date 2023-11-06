@@ -1,6 +1,6 @@
 use crate::geometry::{
     board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
-    tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile},
+    tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
 };
 
 use either::Either;
@@ -143,6 +143,14 @@ impl Game<TileFloating> {
             self.s.tile = candidate;
             direction = (column - self.s.tile.displ_x()).signum();
             candidate = self.s.tile.clone().displace_by(direction, 0);
+        }
+    }
+
+    pub fn rotate_tile(&mut self) {
+        let candidate = self.s.tile.clone().rotate_ccw();
+
+        if self.s.board.is_position_valid(&candidate) {
+            self.s.tile = candidate;
         }
     }
 }
