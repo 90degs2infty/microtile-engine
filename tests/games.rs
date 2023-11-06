@@ -188,5 +188,77 @@ fn game_one() -> Result<()> {
     check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 5)?;
 
+    // Tile line
+    let tile = BasicTile::Line;
+    let active = [
+        [true, true, true, true, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+    let passive = [
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+
+    let mut game = place_tile_continue(game, tile)?;
+    game.rotate_tile();
+    game.move_tile_up_to(0);
+    let game = push_tile_down(game, 3)?;
+    check_snapshots(&game, &active, &passive);
+    let game = process_rows(game, 5)?;
+
+    // Tile line
+    let tile = BasicTile::Line;
+    let active = [
+        [true, true, true, true, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+    let passive = [
+        [false; BOARD_COLS],
+        [true, true, false, false, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+
+    let mut game = place_tile_continue(game, tile)?;
+    game.rotate_tile();
+    game.move_tile_up_to(0);
+    let game = push_tile_down(game, 2)?;
+    check_snapshots(&game, &active, &passive);
+    let game = process_rows(game, 5)?;
+
+    // Tile Line
+    let tile = BasicTile::Line;
+    let active = [
+        [true, true, true, true, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+    let passive = [
+        [false; BOARD_COLS],
+        [true, true, true, true, false],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+        [false; BOARD_COLS],
+    ];
+
+    let mut game = place_tile_continue(game, tile)?;
+    game.rotate_tile();
+    game.move_tile_up_to(4);
+    let game = push_tile_down(game, 2)?;
+    check_snapshots(&game, &active, &passive);
+    let game = process_rows(game, 5)?;
+
     Ok(())
 }
