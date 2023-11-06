@@ -80,11 +80,17 @@ where
     T: Discrete2DSet,
 {
     fn contains(&self, x: i32, y: i32) -> bool {
+        // The tile is expected to be rotated counter-clockwise (since the
+        // `Rotatee` trait defines rotations to be counter-clockwise).
+        // When calling `contains` on the contained tile below, the specified
+        // coordinates are interpreted by the tile in its local system of coordinates.
+        // Hence, we have to use the clockwise rotation matrix to map the vector
+        // (x, y) into the tile-local system of coordinates.
         match self.a {
             Angle::Zero => self.t.contains(x, y),
-            Angle::Ninety => self.t.contains(-y, x),
+            Angle::Ninety => self.t.contains(y, -x),
             Angle::OneEighty => self.t.contains(-x, -y),
-            Angle::TwoSeventy => self.t.contains(y, -x),
+            Angle::TwoSeventy => self.t.contains(-y, x),
         }
     }
 }
