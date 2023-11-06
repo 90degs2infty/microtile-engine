@@ -133,6 +133,8 @@ impl Game<TileFloating> {
     ///
     /// If moving the tile to `column` is not valid, the tile is moved as far as possible.
     ///
+    /// **Caution:** the column is counted 1-indexed here!
+    ///
     /// # Panics
     ///
     /// If specified column cannot be converted to an `i32`, i.e. if
