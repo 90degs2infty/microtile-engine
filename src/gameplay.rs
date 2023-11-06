@@ -1,6 +1,10 @@
-use crate::geometry::{
-    board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
-    tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
+use crate::{
+    geometry::{
+        board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
+        raster::Rasterization,
+        tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
+    },
+    rendering::{Active, Passive, Rendering},
 };
 
 use either::Either;
@@ -166,5 +170,47 @@ impl Game<ProcessRows> {
                 s: TileNeeded::new(board),
             }),
         }
+    }
+}
+
+impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<TileNeeded> {
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        self.s.board.render_buf(buffer);
+    }
+}
+
+impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<TileFloating> {
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        self.s.board.render_buf(buffer);
+    }
+}
+
+// impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Game<TileFloating> {
+//     fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+//         self.s.tile.render_buf(buffer);
+//     }
+// }
+
+impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<ProcessRows> {
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        <Board<BoardProcesses> as Rendering<BOARD_ROWS, BOARD_COLS, Passive>>::render_buf(
+            &self.s.board,
+            buffer,
+        );
+    }
+}
+
+impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Game<ProcessRows> {
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        <Board<BoardProcesses> as Rendering<BOARD_ROWS, BOARD_COLS, Active>>::render_buf(
+            &self.s.board,
+            buffer,
+        );
+    }
+}
+
+impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<Over> {
+    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
+        self.s.board.render_buf(buffer);
     }
 }
