@@ -46,6 +46,12 @@ impl Grid {
             .ok_or(GridError::InvalidIndex)
     }
 
+    pub fn clear_element(self, row: usize, col: usize) -> Result<Self, GridError> {
+        Self::element_bit(row, col)
+            .map(|bit| Self::new(self.0 & !bit))
+            .ok_or(GridError::InvalidIndex)
+    }
+
     pub fn is_element_set(&self, row: usize, col: usize) -> Result<bool, GridError> {
         Self::element_bit(row, col)
             .map(|bit| (self.0 & bit) != 0)
@@ -141,6 +147,12 @@ impl ExtGrid {
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
         Self::element_bit(row, col)
             .map(|bit| Self::new(self.0 | bit))
+            .ok_or(GridError::InvalidIndex)
+    }
+
+    pub fn clear_element(self, row: usize, col: usize) -> Result<Self, GridError> {
+        Self::element_bit(row, col)
+            .map(|bit| Self::new(self.0 & !bit))
             .ok_or(GridError::InvalidIndex)
     }
 
