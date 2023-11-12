@@ -60,7 +60,6 @@ impl Default for Grid {
 pub struct ExtGrid(u64);
 
 impl ExtGrid {
-    pub const RIM: Self = Self::new(0);
     // rim is encoded in upper half of u64
     const OFFSET_BOTTOM_EDGE: usize = 32;
     const OFFSET_FIRST_CENTER_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + BOARD_COLS + 2;
@@ -68,6 +67,8 @@ impl ExtGrid {
 
     const TOP_ROW_IDX: usize = BOARD_ROWS + 1;
     const RIGHT_COL_IDX: usize = BOARD_COLS + 1;
+
+    pub const RIM: Self = Self::new(0xffffff00000000);
 
     const fn new(grid: u64) -> Self {
         Self { 0: grid }
