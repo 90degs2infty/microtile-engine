@@ -9,3 +9,6 @@ edition = "2021"
 array-init = "2.1.0"
 either = { version = "1.9.0", features = [] }
 heapless = "0.7.16"
+
+[dev-dependencies]
+anyhow = "1.0.75"

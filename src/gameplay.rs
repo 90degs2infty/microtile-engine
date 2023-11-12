@@ -1,7 +1,6 @@
 use crate::{
     geometry::{
         board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
-        raster::Rasterization,
         tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
     },
     rendering::{Active, Passive, Rendering},
@@ -91,8 +90,8 @@ impl Game<TileNeeded> {
     pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating>, Game<Over>> {
         let (_, height) = tile.dimensions();
         let tile = DisplacedTile::new(RotatedTile::new(tile)).displace_by(
-            (BOARD_COLS / 2).try_into().unwrap(),
-            (BOARD_ROWS - height).try_into().unwrap(),
+            (BOARD_COLS / 2 + 1).try_into().unwrap(),
+            (BOARD_ROWS - height + 1).try_into().unwrap(),
         );
         if self.s.board.is_position_valid(&tile) {
             Either::Left(Game {
@@ -133,6 +132,8 @@ impl Game<TileFloating> {
     /// Tries to move the tile horizontally to `column`.
     ///
     /// If moving the tile to `column` is not valid, the tile is moved as far as possible.
+    ///
+    /// **Caution:** the column is counted 1-indexed here!
     ///
     /// # Panics
     ///

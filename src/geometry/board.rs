@@ -3,7 +3,7 @@ use crate::{
     rendering::{Active, Passive, Rendering},
 };
 use array_init::{array_init, from_iter};
-use core::{iter::zip, result::Result};
+use core::{iter::zip, ops::Not, result::Result};
 use either::Either;
 
 // As of now, computations on const generics are not possible in a somewhat stable manner
@@ -77,8 +77,9 @@ impl Board<TakesTile> {
         let raster = tile.rasterize();
 
         zip(raster, &self.grid)
-            .map(|(a, b)| zip(a, b).map(|(a, b)| a && *b).all(|b| b))
-            .all(|b| b)
+            .map(|(a, b)| zip(a, b).map(|(a, b)| a && *b).any(|b| b))
+            .any(|b| b)
+            .not()
     }
 
     /// # Errors
@@ -178,10 +179,11 @@ impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<ProcessesRows> {
         buffer
             .iter_mut()
             .enumerate()
-            .filter(|(idx, _)| *idx + 1 != self.state.current) // current acts as if 1-indexed
+            .map(|(idx, row)| (idx + 1, row)) // index 0 in buffer corresponds to index 1 in grid
+            .filter(|(idx, _)| *idx != self.state.current)
             .for_each(|(idx, row)| row.copy_from_slice(&self.grid[idx][1..=5]));
 
-        buffer[self.state.current - 1] = [false; BOARD_COLS];
+        buffer[self.state.current - 1] = [false; BOARD_COLS]; // again, adapt for the offset in indices
     }
 }
 
