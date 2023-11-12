@@ -56,6 +56,7 @@ impl Default for Grid {
 }
 
 /// 7 by 7 grid encoded in an `u64`
+#[derive(Debug, PartialEq, Eq)]
 pub struct ExtGrid(u64);
 
 impl ExtGrid {
