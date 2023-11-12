@@ -54,6 +54,45 @@ impl Default for Grid {
     }
 }
 
+/// 7 by 7 grid encoded in an `u64`
+pub struct ExtGrid(u64);
+
+impl ExtGrid {
+    pub const RIM: Self = Self::new(0);
+
+    const fn new(grid: u64) -> Self {
+        Self { 0: grid }
+    }
+
+    pub fn overlaps(&self, other: &ExtGrid) -> bool {
+        (self.0 & other.0) != 0
+    }
+
+    pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
+        todo!()
+    }
+
+    pub fn is_element_set(&self, row: usize, col: usize) -> Result<bool, GridError> {
+        todo!()
+    }
+
+    pub fn center(self) -> Grid {
+        todo!()
+    }
+}
+
+impl Default for ExtGrid {
+    fn default() -> Self {
+        Self::new(0)
+    }
+}
+
+impl From<Grid> for ExtGrid {
+    fn from(value: Grid) -> Self {
+        Self::new(value.0 as u64)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
