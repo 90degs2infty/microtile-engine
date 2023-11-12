@@ -101,8 +101,8 @@ mod tests {
     fn default_no_element_set() -> Result<(), GridError> {
         let grid = Grid::default();
 
-        for row in 0..5 {
-            for col in 0..5 {
+        for row in 0..BOARD_ROWS {
+            for col in 0..BOARD_COLS {
                 assert!(!grid.is_element_set(row, col)?)
             }
         }
@@ -111,8 +111,8 @@ mod tests {
 
     #[test]
     fn set_element_consistent_with_is_element_set() -> Result<(), GridError> {
-        for row in 0..5 {
-            for col in 0..5 {
+        for row in 0..BOARD_ROWS {
+            for col in 0..BOARD_COLS {
                 assert!(Grid::default()
                     .set_element(row, col)?
                     .is_element_set(row, col)?);
