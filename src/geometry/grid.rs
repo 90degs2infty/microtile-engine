@@ -146,4 +146,41 @@ mod tests {
         }
         Ok(())
     }
+
+    #[test]
+    fn rim() -> Result<(), GridError> {
+        let rim = ExtGrid::RIM;
+
+        for row in 0..BOARD_ROWS {
+            for col in 0..BOARD_COLS {
+                assert!(!rim.is_element_set(1 + row, 1 + col)?);
+            }
+        }
+
+        for col in 0..(BOARD_COLS + 2) {
+            assert!(rim.is_element_set(0, col)?);
+            assert!(rim.is_element_set(BOARD_ROWS + 1, col)?);
+        }
+
+        for row in 0..BOARD_ROWS {
+            assert!(rim.is_element_set(row + 1, 0)?);
+            assert!(rim.is_element_set(row + 1, BOARD_COLS + 1)?);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn ext_center_matches_grid() -> Result<(), GridError> {
+        let grid = Grid::default()
+            .set_element(0, 0)?
+            .set_element(1, 1)?
+            .set_element(2, 2)?;
+        let ext_grid = ExtGrid::default()
+            .set_element(1, 1)?
+            .set_element(2, 2)?
+            .set_element(3, 3)?;
+
+        assert_eq!(grid, ext_grid.center());
+        Ok(())
+    }
 }
