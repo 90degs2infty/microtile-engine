@@ -36,6 +36,10 @@ impl Grid {
         (self.0 & other.0) != 0
     }
 
+    pub fn union(self, other: Self) -> Self {
+        Self::new(self.0 | other.0)
+    }
+
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
         Self::element_bit(row, col)
             .map(|bit| Self::new(self.0 | bit))
@@ -128,6 +132,10 @@ impl ExtGrid {
 
     pub fn overlaps(&self, other: &ExtGrid) -> bool {
         (self.0 & other.0) != 0
+    }
+
+    pub fn union(self, other: Self) -> Self {
+        Self::new(self.0 | other.0)
     }
 
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
