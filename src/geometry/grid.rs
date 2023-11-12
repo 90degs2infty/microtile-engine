@@ -142,7 +142,8 @@ impl ExtGrid {
     }
 
     pub fn center(self) -> Grid {
-        todo!()
+        // the center part is encoded at the lower half of `self.0`
+        Grid::new((self.0 & 0xffffffff) as u32)
     }
 }
 
