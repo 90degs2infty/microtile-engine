@@ -6,6 +6,7 @@ pub enum GridError {
 }
 
 /// 5 by 5 grid encoded in an `u32`
+#[derive(Debug, PartialEq, Eq)]
 pub struct Grid(u32);
 
 impl Grid {
