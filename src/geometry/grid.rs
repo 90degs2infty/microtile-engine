@@ -136,7 +136,9 @@ impl ExtGrid {
     }
 
     pub fn is_element_set(&self, row: usize, col: usize) -> Result<bool, GridError> {
-        todo!()
+        Self::element_bit(row, col)
+            .map(|bit| (self.0 & bit) != 0)
+            .ok_or(GridError::InvalidIndex)
     }
 
     pub fn center(self) -> Grid {
