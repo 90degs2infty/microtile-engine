@@ -61,9 +61,68 @@ pub struct ExtGrid(u64);
 
 impl ExtGrid {
     pub const RIM: Self = Self::new(0);
+    // rim is encoded in upper half of u64
+    const OFFSET_BOTTOM_EDGE: usize = 32;
+    const OFFSET_FIRST_CENTER_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + BOARD_COLS + 2;
+    const OFFSET_TOP_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + 2 * BOARD_ROWS;
+
+    const TOP_ROW_IDX: usize = BOARD_ROWS + 1;
+    const RIGHT_COL_IDX: usize = BOARD_COLS + 1;
 
     const fn new(grid: u64) -> Self {
         Self { 0: grid }
+    }
+
+    // bit indices for the "inner" (that is not the corners) part of vertical edges
+    const fn vertical_rim_element_to_bit_idx(row: usize, col: usize) -> Option<usize> {
+        if row >= 1 && row <= BOARD_ROWS {
+            let offset = Self::OFFSET_FIRST_CENTER_EDGE + (row - 1) * 2;
+            match col {
+                0 => Some(offset),
+                Self::RIGHT_COL_IDX => Some(offset + 1),
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
+    const fn element_to_bit_idx(row: usize, col: usize) -> Option<usize> {
+        match (row, col) {
+            // bottom edge
+            (0, col) => {
+                if col < BOARD_COLS + 2 {
+                    Some(Self::OFFSET_BOTTOM_EDGE + col)
+                } else {
+                    None
+                }
+            }
+            // top edge
+            (Self::TOP_ROW_IDX, col) => {
+                if col < BOARD_COLS + 2 {
+                    Some(Self::OFFSET_TOP_EDGE + col)
+                } else {
+                    None
+                }
+            }
+            // left edge
+            (row, 0) => Self::vertical_rim_element_to_bit_idx(row, 0),
+            // right edge
+            (row, Self::RIGHT_COL_IDX) => {
+                Self::vertical_rim_element_to_bit_idx(row, Self::RIGHT_COL_IDX)
+            }
+            // inner (or outside, but handled the same way)
+            (row, col) => Grid::element_to_bit_idx(row - 1, col - 1),
+        }
+    }
+
+    const fn element_bit(row: usize, col: usize) -> Option<u64> {
+        // as of now, you cannot call `.map()` on an `Option` from
+        // a const function, so we have to rebuild `map` locally
+        match Self::element_to_bit_idx(row, col) {
+            Some(val) => Some(1 << val),
+            None => None,
+        }
     }
 
     pub fn overlaps(&self, other: &ExtGrid) -> bool {
@@ -71,7 +130,9 @@ impl ExtGrid {
     }
 
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
-        todo!()
+        Self::element_bit(row, col)
+            .map(|bit| Self::new(self.0 | bit))
+            .ok_or(GridError::InvalidIndex)
     }
 
     pub fn is_element_set(&self, row: usize, col: usize) -> Result<bool, GridError> {
