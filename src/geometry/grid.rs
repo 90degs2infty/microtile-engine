@@ -120,4 +120,28 @@ mod tests {
         }
         Ok(())
     }
+
+    #[test]
+    fn default_no_element_set_ext() -> Result<(), GridError> {
+        let grid = ExtGrid::default();
+
+        for row in 0..(BOARD_ROWS + 2) {
+            for col in 0..(BOARD_COLS + 2) {
+                assert!(!grid.is_element_set(row, col)?)
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn set_element_consistent_with_is_element_set_ext() -> Result<(), GridError> {
+        for row in 0..(BOARD_ROWS + 2) {
+            for col in 0..(BOARD_COLS + 2) {
+                assert!(ExtGrid::default()
+                    .set_element(row, col)?
+                    .is_element_set(row, col)?);
+            }
+        }
+        Ok(())
+    }
 }
