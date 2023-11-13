@@ -105,6 +105,18 @@ impl Grid {
             .map(|bit| (self.0 & bit) != 0)
             .ok_or(GridError::InvalidIndex)
     }
+
+    /// Discard specified row and shift all rows above downwards by one row
+    pub fn discard_and_shift(self, row: usize) -> Result<Self, GridError> {
+        if row >= BOARD_ROWS {
+            return Err(GridError::InvalidIndex);
+        }
+
+        let above = self.0 & Self::ROWS_ABOVE[row];
+        let below = self.0 & Self::ROWS_BELOW[row];
+
+        Ok(Self::new((above >> BOARD_COLS) | below))
+    }
 }
 
 impl Default for Grid {
