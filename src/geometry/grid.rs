@@ -1,4 +1,5 @@
 use super::board::{BOARD_COLS, BOARD_ROWS};
+use paste::paste;
 
 #[derive(Debug)]
 pub enum GridError {
