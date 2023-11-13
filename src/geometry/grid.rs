@@ -12,7 +12,40 @@ pub enum GridError {
 #[derive(Debug, PartialEq, Eq)]
 pub struct Grid(u32);
 
+macro_rules! row {
+    ($r:literal, $val:literal) => {
+        paste! {
+            const [< R $r _RAW >]: u32 = $val;
+            pub const [< R $r >]: Self = Self::new(Self::[< R $r _RAW >]);
+        }
+    };
+}
+
 impl Grid {
+    row!(0, 0x0000_001f);
+    row!(1, 0x0000_03e0);
+    row!(2, 0x0000_7c00);
+    row!(3, 0x000f_8000);
+    row!(4, 0x01f0_0000);
+
+    pub const ROWS: [Self; 5] = [Self::R0, Self::R1, Self::R2, Self::R3, Self::R4];
+
+    const ROWS_BELOW: [u32; 5] = [
+        0x0,
+        Self::R0_RAW,
+        Self::R0_RAW | Self::R1_RAW,
+        Self::R0_RAW | Self::R1_RAW | Self::R2_RAW,
+        Self::R0_RAW | Self::R1_RAW | Self::R2_RAW | Self::R3_RAW,
+    ];
+
+    const ROWS_ABOVE: [u32; 5] = [
+        Self::R4_RAW | Self::R3_RAW | Self::R2_RAW | Self::R1_RAW,
+        Self::R4_RAW | Self::R3_RAW | Self::R2_RAW,
+        Self::R4_RAW | Self::R3_RAW,
+        Self::R4_RAW,
+        0x0,
+    ];
+
     fn new(grid: u32) -> Self {
         Self { 0: grid }
     }
