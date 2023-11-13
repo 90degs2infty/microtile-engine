@@ -109,6 +109,28 @@ impl Default for Grid {
     }
 }
 
+impl From<[[bool; BOARD_COLS]; BOARD_ROWS]> for Grid {
+    fn from(value: [[bool; BOARD_COLS]; BOARD_ROWS]) -> Self {
+        let mut grid = Self::default();
+
+        for row in 0..BOARD_ROWS {
+            for col in 0..BOARD_COLS {
+                if value[row][col] {
+                    grid = grid
+                        .set_element(row, col)
+                        .expect("Hardcoded range should be valid");
+                } else {
+                    grid = grid
+                        .clear_element(row, col)
+                        .expect("Hardcoded range should be valid");
+                }
+            }
+        }
+
+        grid
+    }
+}
+
 /// 7 by 7 grid encoded in an `u64`
 #[derive(Debug, PartialEq, Eq)]
 pub struct ExtGrid(u64);
@@ -230,6 +252,28 @@ impl Default for ExtGrid {
 impl From<Grid> for ExtGrid {
     fn from(value: Grid) -> Self {
         Self::new(value.0 as u64)
+    }
+}
+
+impl From<[[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]> for ExtGrid {
+    fn from(value: [[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]) -> Self {
+        let mut grid = Self::default();
+
+        for row in 0..(BOARD_ROWS + 2) {
+            for col in 0..(BOARD_COLS + 2) {
+                if value[row][col] {
+                    grid = grid
+                        .set_element(row, col)
+                        .expect("Hardcoded range should be valid");
+                } else {
+                    grid = grid
+                        .clear_element(row, col)
+                        .expect("Hardcoded range should be valid");
+                }
+            }
+        }
+
+        grid
     }
 }
 
