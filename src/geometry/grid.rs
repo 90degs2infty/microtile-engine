@@ -1,4 +1,7 @@
-use super::board::{BOARD_COLS, BOARD_ROWS};
+use super::{
+    board::{BOARD_COLS, BOARD_ROWS},
+    tile::{BasicTile, Discrete2DSet, DisplacedTile, RotatedTile},
+};
 use paste::paste;
 
 #[derive(Debug)]
@@ -281,6 +284,144 @@ impl From<[[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]> for ExtGrid {
         }
 
         grid
+    }
+}
+
+/*
+ * I'd love to do this
+ *
+ * ```rust
+ * impl<T> TryFrom<T> for ExtGrid
+ * where
+ *     T: Discrete2DSet,
+ * {
+ *     type Error = GridError;
+ *     fn try_from(value: T) -> Result<Self, Self::Error> {
+ *         let mut grid = ExtGrid::default();
+ *
+ *         for row in 0..(BOARD_ROWS + 2) {
+ *             for col in 0..(BOARD_COLS + 2) {
+ *                 if value.contains(col, row) {
+ *                     grid = grid
+ *                         .set_element(row, col)
+ *                         .expect("Hardcoded range should be valid")
+ *                 }
+ *             }
+ *         }
+ *
+ *         if !value.is_empty() && grid.is_empty() {
+ *             Err(GridError::EmptyIntersection)
+ *         }
+ *
+ *         Ok(grid)
+ *     }
+ * }
+ * ```
+ *
+ * but this gives:
+ *
+ * ```text
+ *
+ * error[E0119]: conflicting implementations of trait `TryFrom<_>` for type `ExtGrid`
+ *    --> src/geometry/grid.rs:257:1
+ *     |
+ * 257 | impl<T> TryFrom<T> for ExtGrid
+ *     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *     |
+ *     = note: conflicting implementation in crate `core`:
+ *             - impl<T, U> TryFrom<U> for T
+ *               where U: Into<T>;
+ *
+ * because of https://users.rust-lang.org/t/trait-bounds-limitations-generic-tryfrom-t-impl-hypothetical-future-impl-triggers-conflicting-implementations-error/101900/1
+ *
+ * So instead, I have to give more specific impls for each type.
+ */
+impl ExtGrid {
+    fn try_from_discrete_2d_set<T>(value: &T) -> Result<Self, GridError>
+    where
+        T: Discrete2DSet,
+    {
+        let mut grid = ExtGrid::default();
+
+        for row in 0..(BOARD_ROWS + 2) {
+            for col in 0..(BOARD_COLS + 2) {
+                if value.contains(
+                    col.try_into().expect("Hardcoded range should be valid"),
+                    row.try_into().expect("Hardcoded range should be valid"),
+                ) {
+                    grid = grid
+                        .set_element(row, col)
+                        .expect("Hardcoded range should be valid")
+                }
+            }
+        }
+
+        if !value.is_empty() && grid.is_empty() {
+            return Err(GridError::EmptyIntersection);
+        }
+
+        Ok(grid)
+    }
+}
+
+// TODO: write a macro for the following impls
+impl TryFrom<BasicTile> for ExtGrid {
+    type Error = GridError;
+
+    fn try_from(value: BasicTile) -> Result<Self, Self::Error> {
+        Self::try_from_discrete_2d_set(&value)
+    }
+}
+
+impl TryFrom<&BasicTile> for ExtGrid {
+    type Error = GridError;
+
+    fn try_from(value: &BasicTile) -> Result<Self, Self::Error> {
+        Self::try_from_discrete_2d_set(value)
+    }
+}
+
+impl<T> TryFrom<RotatedTile<T>> for ExtGrid
+where
+    T: Discrete2DSet,
+{
+    type Error = GridError;
+
+    fn try_from(value: RotatedTile<T>) -> Result<Self, Self::Error> {
+        Self::try_from_discrete_2d_set(&value)
+    }
+}
+
+impl<T> TryFrom<&RotatedTile<T>> for ExtGrid
+where
+    T: Discrete2DSet,
+{
+    type Error = GridError;
+
+    fn try_from(value: &RotatedTile<T>) -> Result<Self, Self::Error> {
+        Self::try_from_discrete_2d_set(value)
+    }
+}
+
+impl<T> TryFrom<DisplacedTile<T>> for ExtGrid
+where
+    T: Discrete2DSet,
+{
+    type Error = GridError;
+
+    fn try_from(value: DisplacedTile<T>) -> Result<Self, Self::Error> {
+        Self::try_from_discrete_2d_set(&value)
+    }
+}
+
+impl<T> TryFrom<&DisplacedTile<T>> for ExtGrid
+where
+    T: Discrete2DSet,
+{
+    type Error = GridError;
+
+    fn try_from(value: &DisplacedTile<T>) -> Result<Self, Self::Error> {
+        Self::try_from_discrete_2d_set(value)
     }
 }
 
