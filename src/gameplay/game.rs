@@ -1,8 +1,6 @@
 use crate::{
-    geometry::{
-        board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
-        tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
-    },
+    gameplay::board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
+    geometry::tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
     rendering::{Active, Passive, Rendering},
 };
 
