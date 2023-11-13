@@ -63,6 +63,7 @@ impl<T> DisplacedTile<T> {
 
 pub trait Discrete2DSet {
     fn contains(&self, x: i32, y: i32) -> bool;
+    fn is_empty(&self) -> bool;
 }
 
 impl Discrete2DSet for BasicTile {
@@ -72,6 +73,10 @@ impl Discrete2DSet for BasicTile {
             BasicTile::Diagonal => (x == 0 && y == 0) || (x == 1 && y == 1),
             BasicTile::Line => x == 0 && (y == 0 || y == 1),
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        false
     }
 }
 
@@ -93,6 +98,10 @@ where
             Angle::TwoSeventy => self.t.contains(-y, x),
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.t.is_empty()
+    }
 }
 
 impl<T> Discrete2DSet for DisplacedTile<T>
@@ -101,6 +110,10 @@ where
 {
     fn contains(&self, x: i32, y: i32) -> bool {
         self.t.contains(x - self.displ_x, y - self.displ_y)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.t.is_empty()
     }
 }
 
