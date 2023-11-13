@@ -2,6 +2,7 @@ use super::board::{BOARD_COLS, BOARD_ROWS};
 
 #[derive(Debug)]
 pub enum GridError {
+    /// Access using invalid index
     InvalidIndex,
     /// Non-empty set lead to an empty grid representation
     EmptyIntersection,
