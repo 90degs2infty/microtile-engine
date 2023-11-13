@@ -255,6 +255,12 @@ impl From<Grid> for ExtGrid {
     }
 }
 
+impl From<&Grid> for ExtGrid {
+    fn from(value: &Grid) -> Self {
+        Self::new(value.0 as u64)
+    }
+}
+
 impl From<[[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]> for ExtGrid {
     fn from(value: [[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]) -> Self {
         let mut grid = Self::default();
