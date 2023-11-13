@@ -1,7 +1,4 @@
-use super::{
-    board::{BOARD_COLS, BOARD_ROWS},
-    tile::{BasicTile, Discrete2DSet, DisplacedTile, RotatedTile},
-};
+use super::tile::{BasicTile, Discrete2DSet, DisplacedTile, RotatedTile};
 use paste::paste;
 
 #[derive(Debug)]
@@ -26,6 +23,9 @@ macro_rules! row {
 }
 
 impl Grid {
+    pub const NUM_ROWS: usize = 5;
+    pub const NUM_COLS: usize = 5;
+
     row!(0, 0x0000_001f);
     row!(1, 0x0000_03e0);
     row!(2, 0x0000_7c00);
@@ -56,10 +56,10 @@ impl Grid {
 
     // elements are encoded row major
     const fn element_to_bit_idx(row: usize, col: usize) -> Option<usize> {
-        if row >= BOARD_ROWS || col >= BOARD_COLS {
+        if row >= Self::NUM_ROWS || col >= Self::NUM_ROWS {
             None
         } else {
-            Some(row * BOARD_COLS + col)
+            Some(row * Self::NUM_COLS + col)
         }
     }
 
@@ -108,14 +108,14 @@ impl Grid {
 
     /// Discard specified row and shift all rows above downwards by one row
     pub fn discard_and_shift(self, row: usize) -> Result<Self, GridError> {
-        if row >= BOARD_ROWS {
+        if row >= Self::NUM_ROWS {
             return Err(GridError::InvalidIndex);
         }
 
         let above = self.0 & Self::ROWS_ABOVE[row];
         let below = self.0 & Self::ROWS_BELOW[row];
 
-        Ok(Self::new((above >> BOARD_COLS) | below))
+        Ok(Self::new((above >> Self::NUM_COLS) | below))
     }
 }
 
@@ -125,12 +125,12 @@ impl Default for Grid {
     }
 }
 
-impl From<[[bool; BOARD_COLS]; BOARD_ROWS]> for Grid {
-    fn from(value: [[bool; BOARD_COLS]; BOARD_ROWS]) -> Self {
+impl From<[[bool; Self::NUM_COLS]; Self::NUM_ROWS]> for Grid {
+    fn from(value: [[bool; Self::NUM_COLS]; Self::NUM_ROWS]) -> Self {
         let mut grid = Self::default();
 
-        for row in 0..BOARD_ROWS {
-            for col in 0..BOARD_COLS {
+        for row in 0..Self::NUM_ROWS {
+            for col in 0..Self::NUM_COLS {
                 if value[row][col] {
                     grid = grid
                         .set_element(row, col)
@@ -152,13 +152,16 @@ impl From<[[bool; BOARD_COLS]; BOARD_ROWS]> for Grid {
 pub struct ExtGrid(u64);
 
 impl ExtGrid {
+    pub const NUM_ROWS: usize = Grid::NUM_ROWS + 2;
+    pub const NUM_COLS: usize = Grid::NUM_COLS + 2;
+
     // rim is encoded in upper half of u64
     const OFFSET_BOTTOM_EDGE: usize = 32;
-    const OFFSET_FIRST_CENTER_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + BOARD_COLS + 2;
-    const OFFSET_TOP_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + 2 * BOARD_ROWS;
+    const OFFSET_FIRST_CENTER_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + Self::NUM_COLS;
+    const OFFSET_TOP_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + 2 * (Self::NUM_ROWS - 2);
 
-    const TOP_ROW_IDX: usize = BOARD_ROWS + 1;
-    const RIGHT_COL_IDX: usize = BOARD_COLS + 1;
+    const TOP_ROW_IDX: usize = Self::NUM_ROWS - 1;
+    const RIGHT_COL_IDX: usize = Self::NUM_COLS - 1;
 
     const RIM_RAW: u64 = 0xffffff00000000;
     pub const RIM: Self = Self::new(Self::RIM_RAW);
@@ -169,7 +172,7 @@ impl ExtGrid {
 
     // bit indices for the "inner" (that is not the corners) part of vertical edges
     const fn vertical_rim_element_to_bit_idx(row: usize, col: usize) -> Option<usize> {
-        if row >= 1 && row <= BOARD_ROWS {
+        if row > 0 && row < Self::TOP_ROW_IDX {
             let offset = Self::OFFSET_FIRST_CENTER_EDGE + (row - 1) * 2;
             match col {
                 0 => Some(offset),
@@ -185,7 +188,7 @@ impl ExtGrid {
         match (row, col) {
             // bottom edge
             (0, col) => {
-                if col < BOARD_COLS + 2 {
+                if col < Self::NUM_COLS {
                     Some(Self::OFFSET_BOTTOM_EDGE + col)
                 } else {
                     None
@@ -193,7 +196,7 @@ impl ExtGrid {
             }
             // top edge
             (Self::TOP_ROW_IDX, col) => {
-                if col < BOARD_COLS + 2 {
+                if col < Self::NUM_COLS {
                     Some(Self::OFFSET_TOP_EDGE + col)
                 } else {
                     None
@@ -277,12 +280,12 @@ impl From<&Grid> for ExtGrid {
     }
 }
 
-impl From<[[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]> for ExtGrid {
-    fn from(value: [[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]) -> Self {
+impl From<[[bool; Self::NUM_COLS]; Self::NUM_ROWS]> for ExtGrid {
+    fn from(value: [[bool; Self::NUM_COLS]; Self::NUM_ROWS]) -> Self {
         let mut grid = Self::default();
 
-        for row in 0..(BOARD_ROWS + 2) {
-            for col in 0..(BOARD_COLS + 2) {
+        for row in 0..(Self::NUM_ROWS) {
+            for col in 0..(Self::NUM_COLS) {
                 if value[row][col] {
                     grid = grid
                         .set_element(row, col)
@@ -311,8 +314,8 @@ impl From<[[bool; BOARD_COLS + 2]; BOARD_ROWS + 2]> for ExtGrid {
  *     fn try_from(value: T) -> Result<Self, Self::Error> {
  *         let mut grid = ExtGrid::default();
  *
- *         for row in 0..(BOARD_ROWS + 2) {
- *             for col in 0..(BOARD_COLS + 2) {
+ *         for row in 0..(Self::NUM_ROWS) {
+ *             for col in 0..(Self::NUM_COLS) {
  *                 if value.contains(col, row) {
  *                     grid = grid
  *                         .set_element(row, col)
@@ -355,8 +358,8 @@ impl ExtGrid {
     {
         let mut grid = ExtGrid::default();
 
-        for row in 0..(BOARD_ROWS + 2) {
-            for col in 0..(BOARD_COLS + 2) {
+        for row in 0..(Self::NUM_ROWS) {
+            for col in 0..(Self::NUM_COLS) {
                 if value.contains(
                     col.try_into().expect("Hardcoded range should be valid"),
                     row.try_into().expect("Hardcoded range should be valid"),
@@ -445,8 +448,8 @@ mod tests {
     fn default_no_element_set() -> Result<(), GridError> {
         let grid = Grid::default();
 
-        for row in 0..BOARD_ROWS {
-            for col in 0..BOARD_COLS {
+        for row in 0..Grid::NUM_ROWS {
+            for col in 0..Grid::NUM_COLS {
                 assert!(!grid.is_element_set(row, col)?)
             }
         }
@@ -455,8 +458,8 @@ mod tests {
 
     #[test]
     fn set_element_consistent_with_is_element_set() -> Result<(), GridError> {
-        for row in 0..BOARD_ROWS {
-            for col in 0..BOARD_COLS {
+        for row in 0..Grid::NUM_ROWS {
+            for col in 0..Grid::NUM_COLS {
                 assert!(Grid::default()
                     .set_element(row, col)?
                     .is_element_set(row, col)?);
@@ -469,8 +472,8 @@ mod tests {
     fn default_no_element_set_ext() -> Result<(), GridError> {
         let grid = ExtGrid::default();
 
-        for row in 0..(BOARD_ROWS + 2) {
-            for col in 0..(BOARD_COLS + 2) {
+        for row in 0..ExtGrid::NUM_ROWS {
+            for col in 0..ExtGrid::NUM_COLS {
                 assert!(!grid.is_element_set(row, col)?)
             }
         }
@@ -479,8 +482,8 @@ mod tests {
 
     #[test]
     fn set_element_consistent_with_is_element_set_ext() -> Result<(), GridError> {
-        for row in 0..(BOARD_ROWS + 2) {
-            for col in 0..(BOARD_COLS + 2) {
+        for row in 0..ExtGrid::NUM_ROWS {
+            for col in 0..ExtGrid::NUM_COLS {
                 assert!(ExtGrid::default()
                     .set_element(row, col)?
                     .is_element_set(row, col)?);
@@ -493,20 +496,20 @@ mod tests {
     fn rim() -> Result<(), GridError> {
         let rim = ExtGrid::RIM;
 
-        for row in 0..BOARD_ROWS {
-            for col in 0..BOARD_COLS {
+        for row in 0..(ExtGrid::NUM_ROWS - 2) {
+            for col in 0..(ExtGrid::NUM_COLS - 2) {
                 assert!(!rim.is_element_set(1 + row, 1 + col)?);
             }
         }
 
-        for col in 0..(BOARD_COLS + 2) {
+        for col in 0..ExtGrid::NUM_COLS {
             assert!(rim.is_element_set(0, col)?);
-            assert!(rim.is_element_set(BOARD_ROWS + 1, col)?);
+            assert!(rim.is_element_set(ExtGrid::NUM_ROWS - 1, col)?);
         }
 
-        for row in 0..BOARD_ROWS {
+        for row in 0..ExtGrid::NUM_ROWS {
             assert!(rim.is_element_set(row + 1, 0)?);
-            assert!(rim.is_element_set(row + 1, BOARD_COLS + 1)?);
+            assert!(rim.is_element_set(row + 1, ExtGrid::NUM_COLS - 1)?);
         }
         Ok(())
     }
