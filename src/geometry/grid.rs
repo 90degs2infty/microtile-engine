@@ -122,7 +122,8 @@ impl ExtGrid {
     const TOP_ROW_IDX: usize = BOARD_ROWS + 1;
     const RIGHT_COL_IDX: usize = BOARD_COLS + 1;
 
-    pub const RIM: Self = Self::new(0xffffff00000000);
+    const RIM_RAW: u64 = 0xffffff00000000;
+    pub const RIM: Self = Self::new(Self::RIM_RAW);
 
     const fn new(grid: u64) -> Self {
         Self { 0: grid }
