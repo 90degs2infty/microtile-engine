@@ -68,7 +68,7 @@ impl Grid {
         }
     }
 
-    pub fn overlaps(&self, other: &Grid) -> bool {
+    pub fn overlaps(&self, other: &Self) -> bool {
         (self.0 & other.0) != 0
     }
 
@@ -172,7 +172,7 @@ impl ExtGrid {
         }
     }
 
-    pub fn overlaps(&self, other: &ExtGrid) -> bool {
+    pub fn overlaps(&self, other: &Self) -> bool {
         (self.0 & other.0) != 0
     }
 
