@@ -80,6 +80,10 @@ impl Grid {
         (self.0 & other.0) == other.0
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
         Self::element_bit(row, col)
             .map(|bit| Self::new(self.0 | bit))
@@ -186,6 +190,10 @@ impl ExtGrid {
 
     pub fn contains(&self, other: &Self) -> bool {
         (self.0 & other.0) == other.0
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0 == 0
     }
 
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
