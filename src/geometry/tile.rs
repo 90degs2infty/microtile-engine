@@ -1,7 +1,3 @@
-use array_init::array_init;
-
-use super::raster::Rasterization;
-
 #[derive(Clone)]
 pub enum Angle {
     /// 0° in counter-clockwise order
@@ -217,14 +213,5 @@ impl Dimensionee for BasicTile {
             BasicTile::Line => (1, 2),
             BasicTile::Diagonal => (2, 2),
         }
-    }
-}
-
-impl<const M: usize, const N: usize, T> Rasterization<M, N> for T
-where
-    T: Discrete2DSet,
-{
-    fn rasterize(&self) -> [[bool; N]; M] {
-        array_init(|r| array_init(|c| self.contains(c as i32, r as i32)))
     }
 }
