@@ -88,6 +88,10 @@ impl Grid {
         Self::new(self.0 & (!other.0))
     }
 
+    pub fn intersect(self, other: Self) -> Self {
+        Self::new(self.0 & other.0)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
@@ -241,6 +245,10 @@ impl ExtGrid {
 
     pub fn subtract(self, other: Self) -> Self {
         Self::new(self.0 & (!other.0))
+    }
+
+    pub fn intersect(self, other: Self) -> Self {
+        Self::new(self.0 & other.0)
     }
 
     pub fn is_empty(&self) -> bool {
