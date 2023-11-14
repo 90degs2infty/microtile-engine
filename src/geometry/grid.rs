@@ -3,8 +3,8 @@ use paste::paste;
 
 #[derive(Debug)]
 pub enum GridError {
-    /// Access using invalid index
-    InvalidIndex,
+    /// Access using invalid index `(row, col)`
+    InvalidIndex(Option<usize>, Option<usize>),
     /// Non-empty set lead to an empty grid representation
     EmptyIntersection,
 }
@@ -91,25 +91,25 @@ impl Grid {
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
         Self::element_bit(row, col)
             .map(|bit| Self::new(self.0 | bit))
-            .ok_or(GridError::InvalidIndex)
+            .ok_or(GridError::InvalidIndex(Some(row), Some(col)))
     }
 
     pub fn clear_element(self, row: usize, col: usize) -> Result<Self, GridError> {
         Self::element_bit(row, col)
             .map(|bit| Self::new(self.0 & !bit))
-            .ok_or(GridError::InvalidIndex)
+            .ok_or(GridError::InvalidIndex(Some(row), Some(col)))
     }
 
     pub fn is_element_set(&self, row: usize, col: usize) -> Result<bool, GridError> {
         Self::element_bit(row, col)
             .map(|bit| (self.0 & bit) != 0)
-            .ok_or(GridError::InvalidIndex)
+            .ok_or(GridError::InvalidIndex(Some(row), Some(col)))
     }
 
     /// Discard specified row and shift all rows above downwards by one row
     pub fn discard_and_shift(self, row: usize) -> Result<Self, GridError> {
         if row >= Self::NUM_ROWS {
-            return Err(GridError::InvalidIndex);
+            return Err(GridError::InvalidIndex(Some(row), None));
         }
 
         let above = self.0 & Self::ROWS_ABOVE[row];
@@ -241,19 +241,19 @@ impl ExtGrid {
     pub fn set_element(self, row: usize, col: usize) -> Result<Self, GridError> {
         Self::element_bit(row, col)
             .map(|bit| Self::new(self.0 | bit))
-            .ok_or(GridError::InvalidIndex)
+            .ok_or(GridError::InvalidIndex(Some(row), Some(col)))
     }
 
     pub fn clear_element(self, row: usize, col: usize) -> Result<Self, GridError> {
         Self::element_bit(row, col)
             .map(|bit| Self::new(self.0 & !bit))
-            .ok_or(GridError::InvalidIndex)
+            .ok_or(GridError::InvalidIndex(Some(row), Some(col)))
     }
 
     pub fn is_element_set(&self, row: usize, col: usize) -> Result<bool, GridError> {
         Self::element_bit(row, col)
             .map(|bit| (self.0 & bit) != 0)
-            .ok_or(GridError::InvalidIndex)
+            .ok_or(GridError::InvalidIndex(Some(row), Some(col)))
     }
 
     pub fn center(self) -> Grid {
