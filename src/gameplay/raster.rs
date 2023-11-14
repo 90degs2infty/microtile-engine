@@ -18,7 +18,7 @@ where
     T: Rasterization<Role>,
 {
     fn rasterize(&self) -> Grid {
-        let mut grid: Grid;
+        let mut grid = Grid::default();
         self.rasterize_buf(&mut grid);
         grid
     }
