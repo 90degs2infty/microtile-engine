@@ -17,7 +17,7 @@ macro_rules! row {
     ($r:literal, $val:literal) => {
         paste! {
             const [< R $r _RAW >]: u32 = $val;
-            pub const [< R $r >]: Self = Self::new(Self::[< R $r _RAW >]);
+            pub const [< R $r >]: Self = Self { 0: Self::[< R $r _RAW >] };
         }
     };
 }
