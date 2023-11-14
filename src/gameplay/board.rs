@@ -1,8 +1,8 @@
 // TODO: to be moved to gameplay module
 
 use crate::{
+    gameplay::raster::{Active, Passive, Rasterization},
     geometry::grid::{ExtGrid, Grid},
-    rendering::{Active, Passive, Rendering},
 };
 use core::result::Result;
 use either::Either;
@@ -115,12 +115,9 @@ impl Default for Board<TakesTile> {
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<TakesTile> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        buffer
-            .iter_mut()
-            .enumerate()
-            .for_each(|(idx, row)| row.copy_from_slice(&self.grid[idx][1..=5]));
+impl Rasterization<Passive> for Board<TakesTile> {
+    fn rasterize_buf(&self, out: &mut Grid) {
+        *out = self.grid.clone().center()
     }
 }
 
@@ -165,24 +162,23 @@ impl Board<ProcessesRows> {
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<ProcessesRows> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        buffer
-            .iter_mut()
-            .enumerate()
-            .map(|(idx, row)| (idx + 1, row)) // index 0 in buffer corresponds to index 1 in grid
-            .filter(|(idx, _)| *idx != self.state.current)
-            .for_each(|(idx, row)| row.copy_from_slice(&self.grid[idx][1..=5]));
-
-        buffer[self.state.current - 1] = [false; BOARD_COLS]; // again, adapt for the offset in indices
+impl Rasterization<Passive> for Board<ProcessesRows> {
+    fn rasterize_buf(&self, out: &mut Grid) {
+        *out = self
+            .grid
+            .clone()
+            .center()
+            .subtract(Grid::ROWS[self.state.current - 1].clone());
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Board<ProcessesRows> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        *buffer = [[false; BOARD_COLS]; BOARD_ROWS];
-
-        buffer[self.state.current - 1].copy_from_slice(&self.grid[self.state.current][1..=5]);
+impl Rasterization<Active> for Board<ProcessesRows> {
+    fn rasterize_buf(&self, out: &mut Grid) {
+        *out = self
+            .grid
+            .clone()
+            .center()
+            .intersect(Grid::ROWS[self.state.current - 1].clone())
     }
 }
 
