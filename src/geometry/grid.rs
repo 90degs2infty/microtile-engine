@@ -496,9 +496,9 @@ mod tests {
     fn rim() -> Result<(), GridError> {
         let rim = ExtGrid::RIM;
 
-        for row in 0..(ExtGrid::NUM_ROWS - 2) {
-            for col in 0..(ExtGrid::NUM_COLS - 2) {
-                assert!(!rim.is_element_set(1 + row, 1 + col)?);
+        for row in 1..(ExtGrid::NUM_ROWS - 1) {
+            for col in 1..(ExtGrid::NUM_COLS - 1) {
+                assert!(!rim.is_element_set(row, col)?);
             }
         }
 
@@ -508,8 +508,8 @@ mod tests {
         }
 
         for row in 0..ExtGrid::NUM_ROWS {
-            assert!(rim.is_element_set(row + 1, 0)?);
-            assert!(rim.is_element_set(row + 1, ExtGrid::NUM_COLS - 1)?);
+            assert!(rim.is_element_set(row, 0)?);
+            assert!(rim.is_element_set(row, ExtGrid::NUM_COLS - 1)?);
         }
         Ok(())
     }
