@@ -123,7 +123,7 @@ impl Rasterization<Passive> for Board<TakesTile> {
 
 impl Board<ProcessesRows> {
     #[must_use]
-    pub fn process_row(mut self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
+    pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
         if self.state.current > BOARD_ROWS {
             return Either::Right(Board {
                 state: TakesTile {},
@@ -134,7 +134,7 @@ impl Board<ProcessesRows> {
         // Check current row for being fully populated
         let fully_populated = self
             .grid
-            .contains(&Grid::ROWS[self.state.current - 1].into());
+            .contains(&Grid::ROWS[self.state.current - 1].clone().into());
 
         // Check next row
         if !fully_populated {
