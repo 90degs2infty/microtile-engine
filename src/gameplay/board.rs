@@ -66,11 +66,13 @@ impl Board<TakesTile> {
     #[must_use]
     pub fn is_position_valid<T>(&self, tile: &T) -> bool
     where
-        for<'a> ExtGrid: From<&'a T>,
+        for<'a> &'a T: TryInto<ExtGrid>,
     {
-        let raster = ExtGrid::from(tile);
-
-        self.grid.overlaps(&raster)
+        if let Ok(raster) = tile.try_into() {
+            !self.grid.overlaps(&raster)
+        } else {
+            false
+        }
     }
 
     /// # Errors
@@ -79,8 +81,8 @@ impl Board<TakesTile> {
     /// cells.
     pub fn freeze_tile<T>(self, tile: T) -> Result<Board<ProcessesRows>, BoardError>
     where
-        for<'a> ExtGrid: From<&'a T>,
-        ExtGrid: From<T>,
+        for<'a> &'a T: TryInto<ExtGrid>,
+        T: TryInto<ExtGrid>,
     {
         if !self.is_position_valid(&tile) {
             return Err(BoardError::InvalidPosition);
@@ -95,9 +97,9 @@ impl Board<TakesTile> {
     #[must_use]
     pub fn freeze_tile_assume_valid<T>(self, tile: T) -> Board<ProcessesRows>
     where
-        ExtGrid: From<T>,
+        T: TryInto<ExtGrid>,
     {
-        let raster = ExtGrid::try_from(tile).unwrap_or_default();
+        let raster = tile.try_into().unwrap_or_default();
 
         Board {
             state: ProcessesRows::default(),
