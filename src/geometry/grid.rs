@@ -10,7 +10,7 @@ pub enum GridError {
 }
 
 /// 5 by 5 grid encoded in an `u32`
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Grid(u32);
 
 macro_rules! row {
@@ -148,7 +148,7 @@ impl From<[[bool; Self::NUM_COLS]; Self::NUM_ROWS]> for Grid {
 }
 
 /// 7 by 7 grid encoded in an `u64`
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ExtGrid(u64);
 
 impl ExtGrid {
