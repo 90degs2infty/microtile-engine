@@ -90,7 +90,7 @@ impl Game<TileNeeded> {
     pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating>, Game<Over>> {
         let (_, height) = tile.dimensions();
         let tile = DisplacedTile::new(RotatedTile::new(tile)).displace_by(
-            (BOARD_COLS / 2 + 1).try_into().unwrap(),
+            ((BOARD_COLS >> 1) + 1).try_into().unwrap(), // >> 1 == / 2
             (BOARD_ROWS - height + 1).try_into().unwrap(),
         );
         if self.s.board.is_position_valid(&tile) {
