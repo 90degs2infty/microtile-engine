@@ -84,6 +84,10 @@ impl Grid {
         (self.0 & other.0) == other.0
     }
 
+    pub fn subtract(self, other: Self) -> Self {
+        Self::new(self.0 & (!other.0))
+    }
+
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
@@ -233,6 +237,10 @@ impl ExtGrid {
 
     pub fn contains(&self, other: &Self) -> bool {
         (self.0 & other.0) == other.0
+    }
+
+    pub fn subtract(self, other: Self) -> Self {
+        Self::new(self.0 & (!other.0))
     }
 
     pub fn is_empty(&self) -> bool {
