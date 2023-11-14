@@ -158,7 +158,8 @@ impl ExtGrid {
     // rim is encoded in upper half of u64
     const OFFSET_BOTTOM_EDGE: usize = 32;
     const OFFSET_FIRST_CENTER_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + Self::NUM_COLS;
-    const OFFSET_TOP_EDGE: usize = Self::OFFSET_BOTTOM_EDGE + 2 * (Self::NUM_ROWS - 2);
+    const OFFSET_TOP_EDGE: usize =
+        Self::OFFSET_BOTTOM_EDGE + Self::NUM_COLS + 2 * (Self::NUM_ROWS - 2);
 
     const TOP_ROW_IDX: usize = Self::NUM_ROWS - 1;
     const RIGHT_COL_IDX: usize = Self::NUM_COLS - 1;
