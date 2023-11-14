@@ -1,7 +1,3 @@
-use array_init::array_init;
-
-use super::raster::Rasterization;
-
 #[derive(Clone)]
 pub enum Angle {
     /// 0° in counter-clockwise order
@@ -63,6 +59,7 @@ impl<T> DisplacedTile<T> {
 
 pub trait Discrete2DSet {
     fn contains(&self, x: i32, y: i32) -> bool;
+    fn is_empty(&self) -> bool;
 }
 
 impl Discrete2DSet for BasicTile {
@@ -72,6 +69,10 @@ impl Discrete2DSet for BasicTile {
             BasicTile::Diagonal => (x == 0 && y == 0) || (x == 1 && y == 1),
             BasicTile::Line => x == 0 && (y == 0 || y == 1),
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        false
     }
 }
 
@@ -93,6 +94,10 @@ where
             Angle::TwoSeventy => self.t.contains(-y, x),
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.t.is_empty()
+    }
 }
 
 impl<T> Discrete2DSet for DisplacedTile<T>
@@ -101,6 +106,10 @@ where
 {
     fn contains(&self, x: i32, y: i32) -> bool {
         self.t.contains(x - self.displ_x, y - self.displ_y)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.t.is_empty()
     }
 }
 
@@ -204,14 +213,5 @@ impl Dimensionee for BasicTile {
             BasicTile::Line => (1, 2),
             BasicTile::Diagonal => (2, 2),
         }
-    }
-}
-
-impl<const M: usize, const N: usize, T> Rasterization<M, N> for T
-where
-    T: Discrete2DSet,
-{
-    fn rasterize(&self) -> [[bool; N]; M] {
-        array_init(|r| array_init(|c| self.contains(c as i32, r as i32)))
     }
 }

@@ -1,9 +1,9 @@
 use crate::{
-    geometry::{
+    gameplay::{
         board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
-        tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
+        raster::{Active, Passive, Rasterization},
     },
-    rendering::{Active, Passive, Rendering},
+    geometry::tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
 };
 
 use either::Either;
@@ -90,7 +90,7 @@ impl Game<TileNeeded> {
     pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating>, Game<Over>> {
         let (_, height) = tile.dimensions();
         let tile = DisplacedTile::new(RotatedTile::new(tile)).displace_by(
-            (BOARD_COLS / 2 + 1).try_into().unwrap(),
+            ((BOARD_COLS >> 1) + 1).try_into().unwrap(), // >> 1 == / 2
             (BOARD_ROWS - height + 1).try_into().unwrap(),
         );
         if self.s.board.is_position_valid(&tile) {
@@ -174,15 +174,15 @@ impl Game<ProcessRows> {
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<TileNeeded> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        self.s.board.render_buf(buffer);
+impl Rasterization<Passive> for Game<TileNeeded> {
+    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+        self.s.board.rasterize_buf(out)
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<TileFloating> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        self.s.board.render_buf(buffer);
+impl Rasterization<Passive> for Game<TileFloating> {
+    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+        self.s.board.rasterize_buf(out)
     }
 }
 
@@ -192,26 +192,20 @@ impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<TileFloating> {
 //     }
 // }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<ProcessRows> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        <Board<BoardProcesses> as Rendering<BOARD_ROWS, BOARD_COLS, Passive>>::render_buf(
-            &self.s.board,
-            buffer,
-        );
+impl Rasterization<Passive> for Game<ProcessRows> {
+    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+        <Board<BoardProcesses> as Rasterization<Passive>>::rasterize_buf(&self.s.board, out);
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Game<ProcessRows> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        <Board<BoardProcesses> as Rendering<BOARD_ROWS, BOARD_COLS, Active>>::render_buf(
-            &self.s.board,
-            buffer,
-        );
+impl Rasterization<Active> for Game<ProcessRows> {
+    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+        <Board<BoardProcesses> as Rasterization<Active>>::rasterize_buf(&self.s.board, out);
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Game<Over> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        self.s.board.render_buf(buffer);
+impl Rasterization<Passive> for Game<Over> {
+    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+        self.s.board.rasterize_buf(out);
     }
 }

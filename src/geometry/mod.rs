@@ -1,3 +1,2 @@
-pub mod board;
-pub mod raster;
+pub mod grid;
 pub mod tile;

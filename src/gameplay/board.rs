@@ -1,9 +1,10 @@
+// TODO: to be moved to gameplay module
+
 use crate::{
-    geometry::raster::Rasterization,
-    rendering::{Active, Passive, Rendering},
+    gameplay::raster::{Active, Passive, Rasterization},
+    geometry::grid::{ExtGrid, Grid},
 };
-use array_init::{array_init, from_iter};
-use core::{iter::zip, ops::Not, result::Result};
+use core::result::Result;
 use either::Either;
 
 // As of now, computations on const generics are not possible in a somewhat stable manner
@@ -50,36 +51,28 @@ pub enum BoardError {
 
 pub struct Board<S> {
     state: S,
-    grid: [[bool; BOARD_COLS + 2]; BOARD_ROWS + 2], // row major encoding
+    grid: ExtGrid,
 }
 
 impl Board<TakesTile> {
     #[must_use]
     pub fn new() -> Self {
-        let rim = array_init(|r| {
-            if r == 0 || r == BOARD_ROWS + 1 {
-                [true; BOARD_COLS + 2]
-            } else {
-                array_init(|c| c == 0 || c == BOARD_COLS + 1)
-            }
-        });
         Self {
             state: TakesTile {},
-            grid: rim,
+            grid: ExtGrid::RIM,
         }
     }
 
     #[must_use]
     pub fn is_position_valid<T>(&self, tile: &T) -> bool
     where
-        T: Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }>,
+        for<'a> &'a T: TryInto<ExtGrid>,
     {
-        let raster = tile.rasterize();
-
-        zip(raster, &self.grid)
-            .map(|(a, b)| zip(a, b).map(|(a, b)| a && *b).any(|b| b))
-            .any(|b| b)
-            .not()
+        if let Ok(raster) = tile.try_into() {
+            !self.grid.overlaps(&raster)
+        } else {
+            false
+        }
     }
 
     /// # Errors
@@ -88,7 +81,8 @@ impl Board<TakesTile> {
     /// cells.
     pub fn freeze_tile<T>(self, tile: T) -> Result<Board<ProcessesRows>, BoardError>
     where
-        T: Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }>,
+        for<'a> &'a T: TryInto<ExtGrid>,
+        T: TryInto<ExtGrid>,
     {
         if !self.is_position_valid(&tile) {
             return Err(BoardError::InvalidPosition);
@@ -103,20 +97,13 @@ impl Board<TakesTile> {
     #[must_use]
     pub fn freeze_tile_assume_valid<T>(self, tile: T) -> Board<ProcessesRows>
     where
-        T: Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }>,
+        T: TryInto<ExtGrid>,
     {
-        let raster = tile.rasterize();
-
-        let rows = zip(raster, self.grid).map(|(a, b)| {
-            let row = zip(a, b).map(|(a, b)| a || b);
-            from_iter(row).unwrap()
-        });
-
-        let grid = from_iter(rows).unwrap();
+        let raster = tile.try_into().unwrap_or_default();
 
         Board {
             state: ProcessesRows::default(),
-            grid,
+            grid: self.grid.union(raster),
         }
     }
 }
@@ -128,18 +115,15 @@ impl Default for Board<TakesTile> {
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<TakesTile> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        buffer
-            .iter_mut()
-            .enumerate()
-            .for_each(|(idx, row)| row.copy_from_slice(&self.grid[idx][1..=5]));
+impl Rasterization<Passive> for Board<TakesTile> {
+    fn rasterize_buf(&self, out: &mut Grid) {
+        *out = self.grid.clone().center()
     }
 }
 
 impl Board<ProcessesRows> {
     #[must_use]
-    pub fn process_row(mut self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
+    pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
         if self.state.current > BOARD_ROWS {
             return Either::Right(Board {
                 state: TakesTile {},
@@ -148,7 +132,9 @@ impl Board<ProcessesRows> {
         }
 
         // Check current row for being fully populated
-        let fully_populated = self.grid[self.state.current].iter().all(|b| *b);
+        let fully_populated = self
+            .grid
+            .contains(&Grid::ROWS[self.state.current - 1].clone().into());
 
         // Check next row
         if !fully_populated {
@@ -159,47 +145,49 @@ impl Board<ProcessesRows> {
         }
 
         // Move all rows by one and clear the topmost row
-        for r in self.state.current..BOARD_ROWS {
-            self.grid.copy_within((r + 1)..(r + 2), r);
-        }
+        let shifted = self
+            .grid
+            .center()
+            .discard_and_shift(self.state.current - 1)
+            .expect("Row has been checked before");
 
-        self.grid[BOARD_ROWS] = array_init(|c| c == 0 || c == BOARD_COLS + 1);
-
+        // We have to recheck the current row since the row that used to be
+        // above might be fully populated, too.
         let next_row = self.state.current;
 
         Either::Left(Board {
             state: ProcessesRows::new(next_row),
-            grid: self.grid,
+            grid: ExtGrid::from(shifted).union(ExtGrid::RIM),
         })
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Passive> for Board<ProcessesRows> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        buffer
-            .iter_mut()
-            .enumerate()
-            .map(|(idx, row)| (idx + 1, row)) // index 0 in buffer corresponds to index 1 in grid
-            .filter(|(idx, _)| *idx != self.state.current)
-            .for_each(|(idx, row)| row.copy_from_slice(&self.grid[idx][1..=5]));
-
-        buffer[self.state.current - 1] = [false; BOARD_COLS]; // again, adapt for the offset in indices
+impl Rasterization<Passive> for Board<ProcessesRows> {
+    fn rasterize_buf(&self, out: &mut Grid) {
+        *out = self
+            .grid
+            .clone()
+            .center()
+            .subtract(Grid::ROWS[self.state.current - 1].clone());
     }
 }
 
-impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Board<ProcessesRows> {
-    fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-        *buffer = [[false; BOARD_COLS]; BOARD_ROWS];
-
-        buffer[self.state.current - 1].copy_from_slice(&self.grid[self.state.current][1..=5]);
+impl Rasterization<Active> for Board<ProcessesRows> {
+    fn rasterize_buf(&self, out: &mut Grid) {
+        *out = self
+            .grid
+            .clone()
+            .center()
+            .intersect(Grid::ROWS[self.state.current - 1].clone())
     }
 }
 
+/*
 impl<S> Rasterization<{ BOARD_ROWS + 2 }, { BOARD_COLS + 2 }> for Board<S> {
     fn rasterize(&self) -> [[bool; BOARD_ROWS + 2]; BOARD_COLS + 2] {
         self.grid
     }
-}
+} */
 
 #[cfg(test)]
 mod tests {
@@ -229,7 +217,7 @@ mod tests {
 
         let mut board = Board::<ProcessesRows> {
             state: ProcessesRows::default(),
-            grid: initial_grid,
+            grid: initial_grid.into(),
         };
 
         // Processing all rows takes BOARD_ROWS + 2 iterations (two rows are fully) populated.
@@ -246,6 +234,6 @@ mod tests {
             _ => panic!("Board did not detect end of processing"),
         };
 
-        assert_eq!(board.grid, final_grid)
+        assert_eq!(board.grid, final_grid.into())
     }
 }

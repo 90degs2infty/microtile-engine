@@ -1,12 +1,12 @@
 use anyhow::{bail, Ok, Result};
 use either::Either;
 use microtile_engine::{
-    gameplay::{Game, Over, ProcessRows, TileFloating, TileNeeded},
-    geometry::{
+    gameplay::{
         board::{BOARD_COLS, BOARD_ROWS},
-        tile::BasicTile,
+        game::{Game, Over, ProcessRows, TileFloating, TileNeeded},
+        raster::{Active, Passive, Rasterization},
     },
-    rendering::{Active, Passive, Rendering},
+    geometry::{grid::Grid, tile::BasicTile},
 };
 
 fn place_tile_continue(game: Game<TileNeeded>, tile: BasicTile) -> Result<Game<TileFloating>> {
@@ -60,13 +60,13 @@ fn process_rows(mut game: Game<ProcessRows>, num_iter: usize) -> Result<Game<Til
 
 fn check_snapshot<T>(game: &Game<ProcessRows>, expected: &[[bool; BOARD_COLS]; BOARD_ROWS])
 where
-    Game<ProcessRows>: Rendering<BOARD_ROWS, BOARD_COLS, T>,
+    Game<ProcessRows>: Rasterization<T>,
 {
-    let mut render_buf = [[false; 5]; 5];
+    let mut render_buf = Grid::default();
 
-    <Game<ProcessRows> as Rendering<BOARD_COLS, BOARD_ROWS, T>>::render_buf(&game, &mut render_buf);
+    <Game<ProcessRows> as Rasterization<T>>::rasterize_buf(&game, &mut render_buf);
 
-    assert_eq!(render_buf, *expected);
+    assert_eq!(render_buf, Grid::from(*expected));
 }
 
 fn check_snapshots(
