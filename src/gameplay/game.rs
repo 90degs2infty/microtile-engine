@@ -14,6 +14,7 @@ mod sealed {
 
 pub trait State: sealed::Seal {}
 
+#[derive(Debug)]
 pub struct TileNeeded {
     board: Board<TakesTile>,
 }
@@ -34,6 +35,7 @@ impl Default for TileNeeded {
     }
 }
 
+#[derive(Debug)]
 pub struct TileFloating {
     tile: DisplacedTile<RotatedTile<BasicTile>>,
     board: Board<TakesTile>,
@@ -48,6 +50,7 @@ impl TileFloating {
 impl sealed::Seal for TileFloating {}
 impl State for TileFloating {}
 
+#[derive(Debug)]
 pub struct ProcessRows {
     board: Board<BoardProcesses>,
 }
@@ -61,6 +64,7 @@ impl ProcessRows {
 impl sealed::Seal for ProcessRows {}
 impl State for ProcessRows {}
 
+#[derive(Debug)]
 pub struct Over {
     board: Board<TakesTile>,
 }
@@ -74,6 +78,7 @@ impl Over {
 impl sealed::Seal for Over {}
 impl State for Over {}
 
+#[derive(Debug)]
 pub struct Game<S> {
     s: S,
 }
