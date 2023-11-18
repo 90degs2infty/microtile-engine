@@ -3,7 +3,10 @@ use crate::{
         board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
         raster::{Active, Passive, Rasterization},
     },
-    geometry::tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
+    geometry::{
+        grid::{ExtGrid, Grid},
+        tile::{BasicTile, Dimensionee, DisplacedTile, Displacee, RotatedTile, Rotatee},
+    },
 };
 
 use either::Either;
@@ -180,37 +183,40 @@ impl Game<ProcessRows> {
 }
 
 impl Rasterization<Passive> for Game<TileNeeded> {
-    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+    fn rasterize_buf(&self, out: &mut Grid) {
         self.s.board.rasterize_buf(out)
     }
 }
 
 impl Rasterization<Passive> for Game<TileFloating> {
-    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+    fn rasterize_buf(&self, out: &mut Grid) {
         self.s.board.rasterize_buf(out)
     }
 }
 
-// impl Rendering<BOARD_ROWS, BOARD_COLS, Active> for Game<TileFloating> {
-//     fn render_buf(&self, buffer: &mut [[bool; BOARD_COLS]; BOARD_ROWS]) {
-//         self.s.tile.render_buf(buffer);
-//     }
-// }
+impl Rasterization<Active> for Game<TileFloating> {
+    fn rasterize_buf(&self, out: &mut Grid) {
+        *out = match ExtGrid::try_from(&self.s.tile) {
+            Ok(grid) => grid.center(),
+            _ => Grid::default(),
+        }
+    }
+}
 
 impl Rasterization<Passive> for Game<ProcessRows> {
-    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+    fn rasterize_buf(&self, out: &mut Grid) {
         <Board<BoardProcesses> as Rasterization<Passive>>::rasterize_buf(&self.s.board, out);
     }
 }
 
 impl Rasterization<Active> for Game<ProcessRows> {
-    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+    fn rasterize_buf(&self, out: &mut Grid) {
         <Board<BoardProcesses> as Rasterization<Active>>::rasterize_buf(&self.s.board, out);
     }
 }
 
 impl Rasterization<Passive> for Game<Over> {
-    fn rasterize_buf(&self, out: &mut crate::geometry::grid::Grid) {
+    fn rasterize_buf(&self, out: &mut Grid) {
         self.s.board.rasterize_buf(out);
     }
 }
