@@ -61,7 +61,9 @@ fn process_rows(
     mut game: Game<ProcessRows, NoopObserver>,
     num_rows_to_check: usize,
 ) -> Result<Game<TileNeeded, NoopObserver>> {
-    for _ in 0..num_iter {
+    // note that processing `num_rows_to_check` rows requires only `num_rows_to_check - 1`
+    // calls to `process_row`
+    for _ in 1..num_rows_to_check {
         game = match game.process_row() {
             Either::Left(game) => game,
             Either::Right(_) => bail!("Game did not process all rows"),

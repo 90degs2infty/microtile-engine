@@ -28,6 +28,7 @@ impl State for TakesTile {}
 
 #[derive(Debug)]
 pub struct ProcessesRows {
+    /// 0-indexed, but with respect to a `Grid`'s (as opposed to `ExtGrid`'s) row count.
     current: usize,
 }
 
@@ -42,7 +43,7 @@ impl State for ProcessesRows {}
 
 impl Default for ProcessesRows {
     fn default() -> Self {
-        Self::new(1)
+        Self::new(0)
     }
 }
 
@@ -125,43 +126,48 @@ impl Rasterization<Passive> for Board<TakesTile> {
 }
 
 impl Board<ProcessesRows> {
+    /// Note that if there are 5 rows to check (i.e. no row is fully populated),
+    /// only 4 calls to `process_row` are necessary, as `process_row` enumerates
+    /// the transitions between rows to check (as opposed to the rows themselves).
     #[must_use]
     pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
-        if self.state.current > BOARD_ROWS {
-            return Either::Right(Board {
-                state: TakesTile {},
-                grid: self.grid,
-            });
-        }
-
         // Check current row for being fully populated
         let fully_populated = self
             .grid
-            .contains(&Grid::ROWS[self.state.current - 1].clone().into());
+            .contains(&Grid::ROWS[self.state.current].clone().into());
 
         // Check next row
         if !fully_populated {
-            return Either::Left(Board {
-                state: ProcessesRows::new(self.state.current + 1),
-                grid: self.grid,
-            });
+            let next_row = self.state.current + 1;
+
+            if next_row >= BOARD_ROWS {
+                Either::Right(Board {
+                    state: TakesTile {},
+                    grid: self.grid,
+                })
+            } else {
+                Either::Left(Board {
+                    state: ProcessesRows::new(next_row),
+                    grid: self.grid,
+                })
+            }
+        } else {
+            // Move all rows by one and clear the topmost row
+            let shifted = self
+                .grid
+                .center()
+                .discard_and_shift(self.state.current)
+                .expect("Row has been checked before");
+
+            // We have to recheck the current row since the row that used to be
+            // above might be fully populated, too.
+            let next_row = self.state.current;
+
+            Either::Left(Board {
+                state: ProcessesRows::new(next_row),
+                grid: ExtGrid::from(shifted).union(ExtGrid::RIM),
+            })
         }
-
-        // Move all rows by one and clear the topmost row
-        let shifted = self
-            .grid
-            .center()
-            .discard_and_shift(self.state.current - 1)
-            .expect("Row has been checked before");
-
-        // We have to recheck the current row since the row that used to be
-        // above might be fully populated, too.
-        let next_row = self.state.current;
-
-        Either::Left(Board {
-            state: ProcessesRows::new(next_row),
-            grid: ExtGrid::from(shifted).union(ExtGrid::RIM),
-        })
     }
 }
 
@@ -171,7 +177,7 @@ impl Rasterization<Passive> for Board<ProcessesRows> {
             .grid
             .clone()
             .center()
-            .subtract(Grid::ROWS[self.state.current - 1].clone());
+            .subtract(Grid::ROWS[self.state.current].clone());
     }
 }
 
@@ -181,7 +187,7 @@ impl Rasterization<Active> for Board<ProcessesRows> {
             .grid
             .clone()
             .center()
-            .intersect(Grid::ROWS[self.state.current - 1].clone())
+            .intersect(Grid::ROWS[self.state.current].clone())
     }
 }
 
@@ -223,9 +229,9 @@ mod tests {
             grid: initial_grid.into(),
         };
 
-        // Processing all rows takes BOARD_ROWS + 2 iterations (two rows are fully) populated.
-        // The last call to `process` will produce an Either::right value
-        for iter in 1..=(BOARD_ROWS + 2) {
+        // Two rows are fully populated, hence we have to call `process_row` BOARD_ROWS + 2 - 1 times.
+        // The last call to `process_row` will produce an Either::right value
+        for iter in 1..(BOARD_ROWS + 2) {
             board = match board.process_row() {
                 Either::Left(board) => board,
                 _ => panic!("Board failed to continue processing after iteration {iter}"),
