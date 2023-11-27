@@ -1,7 +1,7 @@
 use crate::{
     gameplay::{
         board::{Board, ProcessesRows as BoardProcesses, TakesTile, BOARD_COLS, BOARD_ROWS},
-        raster::{Active, Passive, Rasterization},
+        raster::{Active, Passive, Rasterization, RasterizationExt},
     },
     geometry::{
         grid::{ExtGrid, Grid},
@@ -81,59 +81,173 @@ impl Over {
 impl sealed::Seal for Over {}
 impl State for Over {}
 
-#[derive(Debug)]
-pub struct Game<S> {
-    s: S,
+pub trait Observer {
+    fn signal_board_changed(&self, active: Grid, passive: Grid);
 }
 
-impl Game<TileNeeded> {
+pub struct NoopObserver;
+
+impl Observer for NoopObserver {
+    fn signal_board_changed(&self, _: Grid, _: Grid) {}
+}
+
+#[derive(Debug)]
+pub enum GameError {
+    ObserverFull,
+    ObserverEmpty,
+}
+
+#[derive(Debug)]
+pub struct Game<S, O> {
+    s: S,
+    observer: Option<O>,
+}
+
+impl<O> Game<TileNeeded, O> {
     #[must_use]
     pub fn new() -> Self {
         Self {
             s: TileNeeded::default(),
+            observer: None,
         }
     }
+}
 
+pub trait SignalSource: sealed::Seal {
+    fn signal_board_changed(&self);
+}
+
+impl<S, O> sealed::Seal for Game<S, O>
+where
+    O: Observer,
+    Self: RasterizationExt<Active> + RasterizationExt<Passive>,
+{
+}
+
+impl<S, O> SignalSource for Game<S, O>
+where
+    O: Observer,
+    Self: RasterizationExt<Active> + RasterizationExt<Passive>,
+{
+    fn signal_board_changed(&self) {
+        if let Some(o) = self.observer.as_ref() {
+            o.signal_board_changed(
+                <Self as RasterizationExt<Active>>::rasterize(&self),
+                <Self as RasterizationExt<Passive>>::rasterize(&self),
+            );
+        }
+    }
+}
+
+impl<O> sealed::Seal for Game<TileNeeded, O> where O: Observer {}
+impl<O> SignalSource for Game<TileNeeded, O>
+where
+    O: Observer,
+{
+    fn signal_board_changed(&self) {
+        if let Some(o) = self.observer.as_ref() {
+            o.signal_board_changed(
+                Grid::default(),
+                <Self as RasterizationExt<Passive>>::rasterize(&self),
+            );
+        }
+    }
+}
+
+impl<O> sealed::Seal for Game<Over, O> where O: Observer {}
+impl<O> SignalSource for Game<Over, O>
+where
+    O: Observer,
+{
+    fn signal_board_changed(&self) {
+        if let Some(o) = self.observer.as_ref() {
+            o.signal_board_changed(
+                Grid::default(),
+                <Self as RasterizationExt<Passive>>::rasterize(&self),
+            );
+        }
+    }
+}
+
+impl<S, O> Game<S, O>
+where
+    O: Observer,
+    Self: SignalSource,
+{
     #[must_use]
-    pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating>, Game<Over>> {
+    fn new_with_signal(s: S, o: Option<O>) -> Self {
+        let game = Self { s, observer: o };
+        game.signal_board_changed();
+        game
+    }
+}
+
+impl<O> Game<TileNeeded, O>
+where
+    O: Observer,
+{
+    #[must_use]
+    pub fn place_tile(self, tile: BasicTile) -> Either<Game<TileFloating, O>, Game<Over, O>> {
         let (_, height) = tile.dimensions();
         let tile = DisplacedTile::new(RotatedTile::new(tile)).displace_by(
             ((BOARD_COLS >> 1) + 1).try_into().unwrap(), // >> 1 == / 2
             (BOARD_ROWS - height + 1).try_into().unwrap(),
         );
         if self.s.board.is_position_valid(&tile) {
-            Either::Left(Game {
-                s: TileFloating::new(tile, self.s.board),
-            })
+            Either::Left(Game::new_with_signal(
+                TileFloating::new(tile, self.s.board),
+                self.observer,
+            ))
         } else {
             Either::Right(Game {
                 s: Over::new(self.s.board),
+                observer: self.observer,
             })
         }
     }
 }
 
-impl Default for Game<TileNeeded> {
+impl<O> Default for Game<TileNeeded, O> {
     #[must_use]
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Game<TileFloating> {
+impl<T, O> Game<T, O> {
+    pub fn set_observer(&mut self, observer: O) -> Result<(), GameError> {
+        if self.observer.is_some() {
+            Err(GameError::ObserverFull)
+        } else {
+            self.observer = Some(observer);
+            Ok(())
+        }
+    }
+
+    pub fn clear_observer(&mut self) -> Result<O, GameError> {
+        self.observer.take().ok_or(GameError::ObserverEmpty)
+    }
+}
+
+impl<O> Game<TileFloating, O>
+where
+    O: Observer,
+{
     #[must_use]
-    pub fn descend_tile(self) -> Either<Game<TileFloating>, Game<ProcessRows>> {
+    pub fn descend_tile(self) -> Either<Game<TileFloating, O>, Game<ProcessRows, O>> {
         let candidate = self.s.tile.clone().displace_by(0, -1);
 
         if self.s.board.is_position_valid(&candidate) {
-            Either::Left(Game {
-                s: TileFloating::new(candidate, self.s.board),
-            })
+            Either::Left(Game::new_with_signal(
+                TileFloating::new(candidate, self.s.board),
+                self.observer,
+            ))
         } else {
             let board = self.s.board.freeze_tile(self.s.tile).unwrap();
-            Either::Right(Game {
-                s: ProcessRows::new(board),
-            })
+            Either::Right(Game::new_with_signal(
+                ProcessRows::new(board),
+                self.observer,
+            ))
         }
     }
 
@@ -151,11 +265,17 @@ impl Game<TileFloating> {
         let column: i32 = column.try_into().unwrap();
         let mut direction = (column - self.s.tile.displ_x()).signum();
         let mut candidate = self.s.tile.clone().displace_by(direction, 0);
+        let mut changed = false;
 
         while direction != 0 && self.s.board.is_position_valid(&candidate) {
             self.s.tile = candidate;
+            changed = true;
+
             direction = (column - self.s.tile.displ_x()).signum();
             candidate = self.s.tile.clone().displace_by(direction, 0);
+        }
+        if changed {
+            self.signal_board_changed();
         }
     }
 
@@ -164,37 +284,42 @@ impl Game<TileFloating> {
 
         if self.s.board.is_position_valid(&candidate) {
             self.s.tile = candidate;
+            self.signal_board_changed();
         }
     }
 }
 
-impl Game<ProcessRows> {
+impl<O> Game<ProcessRows, O>
+where
+    O: Observer,
+{
     #[must_use]
-    pub fn process_row(self) -> Either<Game<ProcessRows>, Game<TileNeeded>> {
+    pub fn process_row(self) -> Either<Game<ProcessRows, O>, Game<TileNeeded, O>> {
         match self.s.board.process_row() {
-            Either::Left(board) => Either::Left(Game {
-                s: ProcessRows::new(board),
-            }),
-            Either::Right(board) => Either::Right(Game {
-                s: TileNeeded::new(board),
-            }),
+            Either::Left(board) => Either::Left(Game::new_with_signal(
+                ProcessRows::new(board),
+                self.observer,
+            )),
+            Either::Right(board) => {
+                Either::Right(Game::new_with_signal(TileNeeded::new(board), self.observer))
+            }
         }
     }
 }
 
-impl Rasterization<Passive> for Game<TileNeeded> {
+impl<O> Rasterization<Passive> for Game<TileNeeded, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
         self.s.board.rasterize_buf(out)
     }
 }
 
-impl Rasterization<Passive> for Game<TileFloating> {
+impl<O> Rasterization<Passive> for Game<TileFloating, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
         self.s.board.rasterize_buf(out)
     }
 }
 
-impl Rasterization<Active> for Game<TileFloating> {
+impl<O> Rasterization<Active> for Game<TileFloating, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
         *out = match ExtGrid::try_from(&self.s.tile) {
             Ok(grid) => grid.center(),
@@ -203,19 +328,19 @@ impl Rasterization<Active> for Game<TileFloating> {
     }
 }
 
-impl Rasterization<Passive> for Game<ProcessRows> {
+impl<O> Rasterization<Passive> for Game<ProcessRows, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
         <Board<BoardProcesses> as Rasterization<Passive>>::rasterize_buf(&self.s.board, out);
     }
 }
 
-impl Rasterization<Active> for Game<ProcessRows> {
+impl<O> Rasterization<Active> for Game<ProcessRows, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
         <Board<BoardProcesses> as Rasterization<Active>>::rasterize_buf(&self.s.board, out);
     }
 }
 
-impl Rasterization<Passive> for Game<Over> {
+impl<O> Rasterization<Passive> for Game<Over, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
         self.s.board.rasterize_buf(out);
     }
