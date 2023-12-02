@@ -27,4 +27,4 @@ Since the aforementioned course is still running and this repository is part of 
 This will change, once the course is over.
 
 Nevertheless, please feel free to point out suggestions, improvements and alike anyway!
-Thank you! 😊
+Thank you! :blush:
