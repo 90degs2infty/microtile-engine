@@ -20,11 +20,13 @@ mod sealed {
 
 pub trait State: sealed::Seal {}
 
+#[derive(Debug)]
 pub struct TakesTile;
 
 impl sealed::Seal for TakesTile {}
 impl State for TakesTile {}
 
+#[derive(Debug)]
 pub struct ProcessesRows {
     current: usize,
 }
@@ -49,6 +51,7 @@ pub enum BoardError {
     InvalidPosition,
 }
 
+#[derive(Debug)]
 pub struct Board<S> {
     state: S,
     grid: ExtGrid,

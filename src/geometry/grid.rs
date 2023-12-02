@@ -1,3 +1,5 @@
+use core::fmt::{Display, Write};
+
 use super::tile::{BasicTile, Discrete2DSet, DisplacedTile, RotatedTile};
 use paste::paste;
 
@@ -130,6 +132,31 @@ impl Grid {
 impl Default for Grid {
     fn default() -> Self {
         Self::new(0)
+    }
+}
+
+impl Display for Grid {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _ = f.write_str("+-----+\n")?;
+
+        for row in (0..Grid::NUM_ROWS).rev() {
+            let _ = f.write_char('|')?;
+
+            for col in 0..Grid::NUM_COLS {
+                if self
+                    .is_element_set(row, col)
+                    .expect("Hardcoded range should be valid")
+                {
+                    let _ = f.write_char('x')?;
+                } else {
+                    let _ = f.write_char(' ')?;
+                }
+            }
+
+            let _ = f.write_str("|\n")?;
+        }
+        let _ = f.write_str("+-----+\n")?;
+        Ok(())
     }
 }
 
