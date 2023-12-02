@@ -3,48 +3,64 @@ use either::Either;
 use microtile_engine::{
     gameplay::{
         board::{BOARD_COLS, BOARD_ROWS},
-        game::{Game, Over, ProcessRows, TileFloating, TileNeeded},
+        game::{Game, NoopObserver, Over, ProcessRows, TileFloating, TileNeeded},
         raster::{Active, Passive, Rasterization},
     },
     geometry::{grid::Grid, tile::BasicTile},
 };
 
-fn place_tile_continue(game: Game<TileNeeded>, tile: BasicTile) -> Result<Game<TileFloating>> {
+fn place_tile_continue(
+    game: Game<TileNeeded, NoopObserver>,
+    tile: BasicTile,
+) -> Result<Game<TileFloating, NoopObserver>> {
     match game.place_tile(tile) {
         Either::Left(game) => Ok(game),
         Either::Right(_) => bail!("Game should not have ended by placing this tile"),
     }
 }
 
-fn place_tile_over(game: Game<TileNeeded>, tile: BasicTile) -> Result<Game<Over>> {
+fn place_tile_over(
+    game: Game<TileNeeded, NoopObserver>,
+    tile: BasicTile,
+) -> Result<Game<Over, NoopObserver>> {
     match game.place_tile(tile) {
         Either::Left(_) => bail!("Game should have ended by placing this tile"),
         Either::Right(game) => Ok(game),
     }
 }
 
-fn descend_tile_no_processing(game: Game<TileFloating>) -> Result<Game<TileFloating>> {
+fn descend_tile_no_processing(
+    game: Game<TileFloating, NoopObserver>,
+) -> Result<Game<TileFloating, NoopObserver>> {
     match game.descend_tile() {
         Either::Left(game) => Ok(game),
         Either::Right(_) => bail!("Game entered `ProcessRows` state too fast"),
     }
 }
 
-fn descend_tile_processing(game: Game<TileFloating>) -> Result<Game<ProcessRows>> {
+fn descend_tile_processing(
+    game: Game<TileFloating, NoopObserver>,
+) -> Result<Game<ProcessRows, NoopObserver>> {
     match game.descend_tile() {
         Either::Left(_) => bail!("Game did not recognize `ProcessRows` state"),
         Either::Right(game) => Ok(game),
     }
 }
 
-fn push_tile_down(mut game: Game<TileFloating>, num_steps: usize) -> Result<Game<ProcessRows>> {
+fn push_tile_down(
+    mut game: Game<TileFloating, NoopObserver>,
+    num_steps: usize,
+) -> Result<Game<ProcessRows, NoopObserver>> {
     for _ in 0..num_steps {
         game = descend_tile_no_processing(game)?;
     }
     descend_tile_processing(game)
 }
 
-fn process_rows(mut game: Game<ProcessRows>, num_iter: usize) -> Result<Game<TileNeeded>> {
+fn process_rows(
+    mut game: Game<ProcessRows, NoopObserver>,
+    num_rows_to_check: usize,
+) -> Result<Game<TileNeeded, NoopObserver>> {
     for _ in 0..num_iter {
         game = match game.process_row() {
             Either::Left(game) => game,
@@ -58,19 +74,21 @@ fn process_rows(mut game: Game<ProcessRows>, num_iter: usize) -> Result<Game<Til
     }
 }
 
-fn check_snapshot<T>(game: &Game<ProcessRows>, expected: &[[bool; BOARD_COLS]; BOARD_ROWS])
-where
-    Game<ProcessRows>: Rasterization<T>,
+fn check_snapshot<T>(
+    game: &Game<ProcessRows, NoopObserver>,
+    expected: &[[bool; BOARD_COLS]; BOARD_ROWS],
+) where
+    Game<ProcessRows, NoopObserver>: Rasterization<T>,
 {
     let mut render_buf = Grid::default();
 
-    <Game<ProcessRows> as Rasterization<T>>::rasterize_buf(&game, &mut render_buf);
+    <Game<ProcessRows, NoopObserver> as Rasterization<T>>::rasterize_buf(&game, &mut render_buf);
 
     assert_eq!(render_buf, Grid::from(*expected));
 }
 
 fn check_snapshots(
-    game: &Game<ProcessRows>,
+    game: &Game<ProcessRows, NoopObserver>,
     active: &[[bool; BOARD_COLS]; BOARD_ROWS],
     passive: &[[bool; BOARD_COLS]; BOARD_ROWS],
 ) {
