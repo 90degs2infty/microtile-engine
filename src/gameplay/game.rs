@@ -95,6 +95,7 @@ impl Observer for NoopObserver {
 pub enum GameError {
     ObserverFull,
     ObserverEmpty,
+    InvalidMove,
 }
 
 #[derive(Debug)]
