@@ -280,12 +280,16 @@ where
         }
     }
 
-    pub fn rotate_tile(&mut self) {
+    #[must_use]
+    pub fn rotate_tile(&mut self) -> Result<(), GameError> {
         let candidate = self.s.tile.clone().rotate_ccw();
 
         if self.s.board.is_position_valid(&candidate) {
             self.s.tile = candidate;
             self.signal_board_changed();
+            Ok(())
+        } else {
+            Err(GameError::InvalidMove)
         }
     }
 }
