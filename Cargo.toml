@@ -14,3 +14,16 @@ paste = "1.0.14"
 
 [dev-dependencies]
 anyhow = "1.0.75"
+
+[lints.rust]
+missing_docs = { level = "warn", priority = 0 }
+
+[lints.rustdoc]
+missing_crate_level_docs = { level = "warn", priority = 1 }
+unescaped_backticks = { level = "warn", priority = 1 }
+
+[lints.clippy]
+cargo = { level = "warn", priority = 2 }
+all = { level = "warn", priority = 3 }
+pedantic = { level = "warn", priority = 4 }
+absolute_paths = { level = "warn", priority = 2 }
