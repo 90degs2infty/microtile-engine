@@ -133,8 +133,8 @@ where
     fn signal_board_changed(&self) {
         if let Some(o) = self.observer.as_ref() {
             o.signal_board_changed(
-                <Self as RasterizationExt<Active>>::rasterize(&self),
-                <Self as RasterizationExt<Passive>>::rasterize(&self),
+                <Self as RasterizationExt<Active>>::rasterize(self),
+                <Self as RasterizationExt<Passive>>::rasterize(self),
             );
         }
     }
@@ -149,7 +149,7 @@ where
         if let Some(o) = self.observer.as_ref() {
             o.signal_board_changed(
                 Grid::default(),
-                <Self as RasterizationExt<Passive>>::rasterize(&self),
+                <Self as RasterizationExt<Passive>>::rasterize(self),
             );
         }
     }
@@ -164,7 +164,7 @@ where
         if let Some(o) = self.observer.as_ref() {
             o.signal_board_changed(
                 Grid::default(),
-                <Self as RasterizationExt<Passive>>::rasterize(&self),
+                <Self as RasterizationExt<Passive>>::rasterize(self),
             );
         }
     }
@@ -280,7 +280,6 @@ where
         }
     }
 
-    #[must_use]
     pub fn rotate_tile(&mut self) -> Result<(), GameError> {
         let candidate = self.s.tile.clone().rotate_ccw();
 
@@ -314,13 +313,13 @@ where
 
 impl<O> Rasterization<Passive> for Game<TileNeeded, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
-        self.s.board.rasterize_buf(out)
+        self.s.board.rasterize_buf(out);
     }
 }
 
 impl<O> Rasterization<Passive> for Game<TileFloating, O> {
     fn rasterize_buf(&self, out: &mut Grid) {
-        self.s.board.rasterize_buf(out)
+        self.s.board.rasterize_buf(out);
     }
 }
 

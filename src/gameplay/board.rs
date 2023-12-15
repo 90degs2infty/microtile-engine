@@ -107,7 +107,7 @@ impl Board<TakesTile> {
 
         Board {
             state: ProcessesRows::default(),
-            grid: self.grid.union(raster),
+            grid: self.grid.union(&raster),
         }
     }
 }
@@ -121,7 +121,7 @@ impl Default for Board<TakesTile> {
 
 impl Rasterization<Passive> for Board<TakesTile> {
     fn rasterize_buf(&self, out: &mut Grid) {
-        *out = self.grid.clone().center()
+        *out = self.grid.clone().center();
     }
 }
 
@@ -137,21 +137,7 @@ impl Board<ProcessesRows> {
             .contains(&Grid::ROWS[self.state.current].clone().into());
 
         // Check next row
-        if !fully_populated {
-            let next_row = self.state.current + 1;
-
-            if next_row >= BOARD_ROWS {
-                Either::Right(Board {
-                    state: TakesTile {},
-                    grid: self.grid,
-                })
-            } else {
-                Either::Left(Board {
-                    state: ProcessesRows::new(next_row),
-                    grid: self.grid,
-                })
-            }
-        } else {
+        if fully_populated {
             // Move all rows by one and clear the topmost row
             let shifted = self
                 .grid
@@ -165,8 +151,22 @@ impl Board<ProcessesRows> {
 
             Either::Left(Board {
                 state: ProcessesRows::new(next_row),
-                grid: ExtGrid::from(shifted).union(ExtGrid::RIM),
+                grid: ExtGrid::from(shifted).union(&ExtGrid::RIM),
             })
+        } else {
+            let next_row = self.state.current + 1;
+
+            if next_row >= BOARD_ROWS {
+                Either::Right(Board {
+                    state: TakesTile {},
+                    grid: self.grid,
+                })
+            } else {
+                Either::Left(Board {
+                    state: ProcessesRows::new(next_row),
+                    grid: self.grid,
+                })
+            }
         }
     }
 }
@@ -177,7 +177,7 @@ impl Rasterization<Passive> for Board<ProcessesRows> {
             .grid
             .clone()
             .center()
-            .subtract(Grid::ROWS[self.state.current].clone());
+            .subtract(&Grid::ROWS[self.state.current].clone());
     }
 }
 
@@ -187,7 +187,7 @@ impl Rasterization<Active> for Board<ProcessesRows> {
             .grid
             .clone()
             .center()
-            .intersect(Grid::ROWS[self.state.current].clone())
+            .intersect(&Grid::ROWS[self.state.current].clone());
     }
 }
 
