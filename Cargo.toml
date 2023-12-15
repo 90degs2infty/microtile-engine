@@ -3,6 +3,10 @@ name = "microtile-engine"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/90degs2infty/microtile-engine"
+categories = [ "embedded", "games", "no-std" ]
+keywords = [ "microbit" ]
+description = "A microscopic Tetris® inspired game engine, targeting embedded devices."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
