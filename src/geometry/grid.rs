@@ -13,6 +13,7 @@ pub enum GridError {
 
 /// 5 by 5 grid encoded in an `u32`
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[must_use]
 pub struct Grid(u32);
 
 macro_rules! row {
@@ -53,7 +54,7 @@ impl Grid {
     ];
 
     fn new(grid: u32) -> Self {
-        Self { 0: grid }
+        Self(grid)
     }
 
     // elements are encoded row major
@@ -74,26 +75,29 @@ impl Grid {
         }
     }
 
+    #[must_use]
     pub fn overlaps(&self, other: &Self) -> bool {
         (self.0 & other.0) != 0
     }
 
-    pub fn union(self, other: Self) -> Self {
+    pub fn union(&self, other: &Self) -> Self {
         Self::new(self.0 | other.0)
     }
 
+    #[must_use]
     pub fn contains(&self, other: &Self) -> bool {
         (self.0 & other.0) == other.0
     }
 
-    pub fn subtract(self, other: Self) -> Self {
+    pub fn subtract(&self, other: &Self) -> Self {
         Self::new(self.0 & (!other.0))
     }
 
-    pub fn intersect(self, other: Self) -> Self {
+    pub fn intersect(&self, other: &Self) -> Self {
         Self::new(self.0 & other.0)
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
@@ -137,25 +141,25 @@ impl Default for Grid {
 
 impl Display for Grid {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _ = f.write_str("+-----+\n")?;
+        f.write_str("+-----+\n")?;
 
         for row in (0..Grid::NUM_ROWS).rev() {
-            let _ = f.write_char('|')?;
+            f.write_char('|')?;
 
             for col in 0..Grid::NUM_COLS {
                 if self
                     .is_element_set(row, col)
                     .expect("Hardcoded range should be valid")
                 {
-                    let _ = f.write_char('x')?;
+                    f.write_char('x')?;
                 } else {
-                    let _ = f.write_char(' ')?;
+                    f.write_char(' ')?;
                 }
             }
 
-            let _ = f.write_str("|\n")?;
+            f.write_str("|\n")?;
         }
-        let _ = f.write_str("+-----+\n")?;
+        f.write_str("+-----+\n")?;
         Ok(())
     }
 }
@@ -164,15 +168,15 @@ impl From<[[bool; Self::NUM_COLS]; Self::NUM_ROWS]> for Grid {
     fn from(value: [[bool; Self::NUM_COLS]; Self::NUM_ROWS]) -> Self {
         let mut grid = Self::default();
 
-        for row in 0..Self::NUM_ROWS {
-            for col in 0..Self::NUM_COLS {
-                if value[row][col] {
+        for (idx_r, row) in value.iter().enumerate() {
+            for (idx_c, element) in row.iter().enumerate() {
+                if *element {
                     grid = grid
-                        .set_element(row, col)
+                        .set_element(idx_r, idx_c)
                         .expect("Hardcoded range should be valid");
                 } else {
                     grid = grid
-                        .clear_element(row, col)
+                        .clear_element(idx_r, idx_c)
                         .expect("Hardcoded range should be valid");
                 }
             }
@@ -184,6 +188,7 @@ impl From<[[bool; Self::NUM_COLS]; Self::NUM_ROWS]> for Grid {
 
 /// 7 by 7 grid encoded in an `u64`
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[must_use]
 pub struct ExtGrid(u64);
 
 impl ExtGrid {
@@ -199,11 +204,11 @@ impl ExtGrid {
     const TOP_ROW_IDX: usize = Self::NUM_ROWS - 1;
     const RIGHT_COL_IDX: usize = Self::NUM_COLS - 1;
 
-    const RIM_RAW: u64 = 0xffffff00000000;
+    const RIM_RAW: u64 = 0x00ff_ffff_0000_0000;
     pub const RIM: Self = Self::new(Self::RIM_RAW);
 
     const fn new(grid: u64) -> Self {
-        Self { 0: grid }
+        Self(grid)
     }
 
     // bit indices for the "inner" (that is not the corners) part of vertical edges
@@ -258,26 +263,29 @@ impl ExtGrid {
         }
     }
 
+    #[must_use]
     pub fn overlaps(&self, other: &Self) -> bool {
         (self.0 & other.0) != 0
     }
 
-    pub fn union(self, other: Self) -> Self {
+    pub fn union(&self, other: &Self) -> Self {
         Self::new(self.0 | other.0)
     }
 
+    #[must_use]
     pub fn contains(&self, other: &Self) -> bool {
         (self.0 & other.0) == other.0
     }
 
-    pub fn subtract(self, other: Self) -> Self {
+    pub fn subtract(&self, other: &Self) -> Self {
         Self::new(self.0 & (!other.0))
     }
 
-    pub fn intersect(self, other: Self) -> Self {
+    pub fn intersect(&self, other: &Self) -> Self {
         Self::new(self.0 & other.0)
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
@@ -302,7 +310,7 @@ impl ExtGrid {
 
     pub fn center(self) -> Grid {
         // the center part is encoded at the lower half of `self.0`
-        Grid::new((self.0 & 0xffffffff) as u32)
+        Grid::new((self.0 & 0xffff_ffff) as u32)
     }
 }
 
@@ -314,13 +322,13 @@ impl Default for ExtGrid {
 
 impl From<Grid> for ExtGrid {
     fn from(value: Grid) -> Self {
-        Self::new(value.0 as u64)
+        Self::new(value.0.into())
     }
 }
 
 impl From<&Grid> for ExtGrid {
     fn from(value: &Grid) -> Self {
-        Self::new(value.0 as u64)
+        Self::new(value.0.into())
     }
 }
 
@@ -328,15 +336,15 @@ impl From<[[bool; Self::NUM_COLS]; Self::NUM_ROWS]> for ExtGrid {
     fn from(value: [[bool; Self::NUM_COLS]; Self::NUM_ROWS]) -> Self {
         let mut grid = Self::default();
 
-        for row in 0..(Self::NUM_ROWS) {
-            for col in 0..(Self::NUM_COLS) {
-                if value[row][col] {
+        for (idx_r, row) in value.iter().enumerate() {
+            for (idx_c, element) in row.iter().enumerate() {
+                if *element {
                     grid = grid
-                        .set_element(row, col)
+                        .set_element(idx_r, idx_c)
                         .expect("Hardcoded range should be valid");
                 } else {
                     grid = grid
-                        .clear_element(row, col)
+                        .clear_element(idx_r, idx_c)
                         .expect("Hardcoded range should be valid");
                 }
             }
@@ -410,7 +418,7 @@ impl ExtGrid {
                 ) {
                     grid = grid
                         .set_element(row, col)
-                        .expect("Hardcoded range should be valid")
+                        .expect("Hardcoded range should be valid");
                 }
             }
         }
