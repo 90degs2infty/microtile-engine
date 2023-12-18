@@ -252,6 +252,7 @@ where
         }
     }
 
+    /// The returned column is counted 0-indexed from the left.
     pub fn tile_column(&self) -> u8 {
         (*self.s.tile.displ_x() - 1)
             .try_into()
