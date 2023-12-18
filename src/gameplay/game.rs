@@ -91,6 +91,20 @@ impl Observer for NoopObserver {
     fn signal_board_changed(&self, _: Grid, _: Grid) {}
 }
 
+enum Direction {
+    Left,
+    Right,
+}
+
+impl From<Direction> for i8 {
+    fn from(value: Direction) -> Self {
+        match value {
+            Direction::Left => -1,
+            Direction::Right => 1,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum GameError {
     ObserverFull,
@@ -259,32 +273,25 @@ where
             .expect("Column should be in range 0 to 4")
     }
 
-    /// Tries to move the tile horizontally to `column`.
-    ///
-    /// If moving the tile to `column` is not valid, the tile is moved as far as possible.
-    ///
-    /// **Caution:** the column is counted 1-indexed here!
-    ///
-    /// # Panics
-    ///
-    /// If specified column cannot be converted to an `i32`, i.e. if
-    /// `let _ : i32 = column.try_into().unwrap()` panics.
-    pub fn move_tile_up_to(&mut self, column: u32) {
-        let column: i32 = column.try_into().unwrap();
-        let mut direction = (column - self.s.tile.displ_x()).signum();
-        let mut candidate = self.s.tile.clone().displace_by(direction, 0);
-        let mut changed = false;
+    fn move_tile_horizontally(&mut self, dir: Direction) -> Result<(), GameError> {
+        let dir: i8 = dir.into();
+        let candidate = self.s.tile.clone().displace_by(dir.into(), 0);
 
-        while direction != 0 && self.s.board.is_position_valid(&candidate) {
+        if self.s.board.is_position_valid(&candidate) {
             self.s.tile = candidate;
-            changed = true;
-
-            direction = (column - self.s.tile.displ_x()).signum();
-            candidate = self.s.tile.clone().displace_by(direction, 0);
-        }
-        if changed {
             self.signal_board_changed();
+            Ok(())
+        } else {
+            Err(GameError::InvalidMove)
         }
+    }
+
+    pub fn move_tile_right(&mut self) -> Result<(), GameError> {
+        self.move_tile_horizontally(Direction::Right)
+    }
+
+    pub fn move_tile_left(&mut self) -> Result<(), GameError> {
+        self.move_tile_horizontally(Direction::Left)
     }
 
     pub fn rotate_tile(&mut self) -> Result<(), GameError> {
