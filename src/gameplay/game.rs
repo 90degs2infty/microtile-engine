@@ -294,34 +294,6 @@ where
         self.move_tile_horizontally(Direction::Left)
     }
 
-    /// Tries to move the tile horizontally to `column`.
-    ///
-    /// If moving the tile to `column` is not valid, the tile is moved as far as possible.
-    ///
-    /// **Caution:** the column is counted 1-indexed here!
-    ///
-    /// # Panics
-    ///
-    /// If specified column cannot be converted to an `i32`, i.e. if
-    /// `let _ : i32 = column.try_into().unwrap()` panics.
-    pub fn move_tile_up_to(&mut self, column: u32) {
-        let column: i32 = column.try_into().unwrap();
-        let mut direction = (column - self.s.tile.displ_x()).signum();
-        let mut candidate = self.s.tile.clone().displace_by(direction, 0);
-        let mut changed = false;
-
-        while direction != 0 && self.s.board.is_position_valid(&candidate) {
-            self.s.tile = candidate;
-            changed = true;
-
-            direction = (column - self.s.tile.displ_x()).signum();
-            candidate = self.s.tile.clone().displace_by(direction, 0);
-        }
-        if changed {
-            self.signal_board_changed();
-        }
-    }
-
     pub fn rotate_tile(&mut self) -> Result<(), GameError> {
         let candidate = self.s.tile.clone().rotate_ccw();
 
