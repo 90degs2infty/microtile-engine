@@ -14,7 +14,10 @@ fn place_tile_continue(
     tile: BasicTile,
 ) -> Result<Game<TileFloating, NoopObserver>> {
     match game.place_tile(tile) {
-        Either::Left(game) => Ok(game),
+        Either::Left(mut game) => {
+            ensure_tile_column(&mut game, 2)?;
+            Ok(game)
+        }
         Either::Right(_) => bail!("Game should not have ended by placing this tile"),
     }
 }
@@ -29,8 +32,27 @@ fn place_tile_over(
     }
 }
 
-fn rotate_tile_valid(game: &mut Game<TileFloating, NoopObserver>) {
-    game.rotate_tile().expect("Rotating tile should be valid")
+fn ensure_tile_column(game: &mut Game<TileFloating, NoopObserver>, column: u8) -> Result<()> {
+    let game_col = game.tile_column();
+    if game_col != column {
+        bail!(
+            "Column does not match expectation - expected {}, found {}",
+            column,
+            game_col
+        );
+    }
+    Ok(())
+}
+
+fn rotate_tile_valid(game: &mut Game<TileFloating, NoopObserver>) -> Result<()> {
+    let prev_col = game.tile_column();
+    if game.rotate_tile().is_err() {
+        bail!("Rotating tile should be valid");
+    }
+    if prev_col != game.tile_column() {
+        bail!("Rotating tile should not change column");
+    }
+    Ok(())
 }
 
 fn rotate_tile_invalid(game: &mut Game<TileFloating, NoopObserver>) -> Result<()> {
@@ -135,7 +157,7 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(1);
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
@@ -160,7 +182,7 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(5);
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
@@ -236,7 +258,7 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(0);
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
@@ -261,7 +283,7 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(0);
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
@@ -286,7 +308,7 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(4);
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
@@ -408,7 +430,7 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(5);
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
@@ -433,9 +455,9 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
-    rotate_tile_valid(&mut game);
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
+    rotate_tile_valid(&mut game)?;
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(5);
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
@@ -486,7 +508,7 @@ fn game_one() -> Result<()> {
 
     let mut game = place_tile_continue(game, tile)?;
     game.move_tile_up_to(2);
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
     let game = process_rows(game, 6)?;
@@ -513,7 +535,7 @@ fn game_one() -> Result<()> {
     game.move_tile_up_to(1);
     rotate_tile_invalid(&mut game)?;
     game.move_tile_up_to(2);
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(3);
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
@@ -562,10 +584,10 @@ fn game_one() -> Result<()> {
     ];
 
     let mut game = place_tile_continue(game, tile)?;
-    rotate_tile_valid(&mut game);
-    rotate_tile_valid(&mut game);
-    rotate_tile_valid(&mut game);
-    rotate_tile_valid(&mut game);
+    rotate_tile_valid(&mut game)?;
+    rotate_tile_valid(&mut game)?;
+    rotate_tile_valid(&mut game)?;
+    rotate_tile_valid(&mut game)?;
     game.move_tile_up_to(5);
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
