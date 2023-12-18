@@ -91,6 +91,20 @@ impl Observer for NoopObserver {
     fn signal_board_changed(&self, _: Grid, _: Grid) {}
 }
 
+enum Direction {
+    Left,
+    Right,
+}
+
+impl From<Direction> for i8 {
+    fn from(value: Direction) -> Self {
+        match value {
+            Direction::Left => -1,
+            Direction::Right => 1,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum GameError {
     ObserverFull,
@@ -250,6 +264,27 @@ where
                 self.observer,
             ))
         }
+    }
+
+    fn move_tile_horizontally(&mut self, dir: Direction) -> Result<(), GameError> {
+        let dir: i8 = dir.into();
+        let candidate = self.s.tile.clone().displace_by(dir.into(), 0);
+
+        if self.s.board.is_position_valid(&candidate) {
+            self.s.tile = candidate;
+            self.signal_board_changed();
+            Ok(())
+        } else {
+            Err(GameError::InvalidMove)
+        }
+    }
+
+    pub fn move_tile_right(&mut self) -> Result<(), GameError> {
+        self.move_tile_horizontally(Direction::Right)
+    }
+
+    pub fn move_tile_left(&mut self) -> Result<(), GameError> {
+        self.move_tile_horizontally(Direction::Left)
     }
 
     /// Tries to move the tile horizontally to `column`.
