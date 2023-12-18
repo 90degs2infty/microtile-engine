@@ -66,8 +66,18 @@ fn rotate_tile_invalid(game: &mut Game<TileFloating, NoopObserver>) -> Result<()
 }
 
 fn move_tile_to(game: &mut Game<TileFloating, NoopObserver>, column: u8) -> Result<()> {
-    // Note: currently the column is 1-indexed when writing but 0-indexed when reading!
-    game.move_tile_up_to(<u8 as Into<u32>>::into(column) + 1);
+    let current_col = game.tile_column();
+    let diff = <u8 as Into<i16>>::into(column) - <u8 as Into<i16>>::into(current_col);
+
+    for _ in 1..=diff.abs() {
+        let res = if diff < 0 {
+            game.move_tile_left()
+        } else {
+            game.move_tile_right()
+        };
+
+        res.map_err(|_| anyhow::anyhow!("Horizontal move should be valid"))?;
+    }
     ensure_tile_column(game, column)
 }
 
@@ -76,7 +86,19 @@ fn overshoot_tile_to(
     overshoot: u8,
     settled: u8,
 ) -> Result<()> {
-    game.move_tile_up_to(overshoot.into());
+    move_tile_to(game, settled)?;
+
+    let diff = <u8 as Into<i16>>::into(overshoot) - <u8 as Into<i16>>::into(settled);
+    for _ in 1..diff.abs() {
+        let res = if diff < 0 {
+            game.move_tile_left()
+        } else {
+            game.move_tile_right()
+        };
+        if res.is_ok() {
+            bail!("Horizontal move should be invalid");
+        }
+    }
     ensure_tile_column(game, settled)
 }
 
