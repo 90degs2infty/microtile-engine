@@ -266,6 +266,13 @@ where
         }
     }
 
+    /// The returned column is counted 0-indexed from the left.
+    pub fn tile_column(&self) -> u8 {
+        (*self.s.tile.displ_x() - 1)
+            .try_into()
+            .expect("Column should be in range 0 to 4")
+    }
+
     fn move_tile_horizontally(&mut self, dir: Direction) -> Result<(), GameError> {
         let dir: i8 = dir.into();
         let candidate = self.s.tile.clone().displace_by(dir.into(), 0);
