@@ -136,6 +136,9 @@ impl Board<ProcessesRows> {
             .grid
             .contains(&Grid::ROWS[self.state.current].clone().into());
 
+        let next_row;
+        let pruned_grid;
+
         // Check next row
         if fully_populated {
             // Move all rows by one and clear the topmost row
@@ -147,26 +150,34 @@ impl Board<ProcessesRows> {
 
             // We have to recheck the current row since the row that used to be
             // above might be fully populated, too.
-            let next_row = self.state.current;
+            next_row = self.state.current;
+            pruned_grid = ExtGrid::from(shifted).union(&ExtGrid::RIM);
+        } else {
+            next_row = self.state.current + 1;
+            pruned_grid = self.grid;
+        }
 
-            Either::Left(Board {
-                state: ProcessesRows::new(next_row),
-                grid: ExtGrid::from(shifted).union(&ExtGrid::RIM),
+        // Guard lookahead, so that we do not check beyond the board's extend
+        if next_row >= BOARD_ROWS {
+            return Either::Right(Board {
+                state: TakesTile {},
+                grid: pruned_grid,
+            });
+        }
+
+        // There are no empty interleaving rows, so once we encounter an empty row, we can skip
+        // ahead
+        let next_row_empty = !pruned_grid.overlaps(&Grid::ROWS[next_row].clone().into());
+        if next_row_empty {
+            Either::Right(Board {
+                state: TakesTile {},
+                grid: pruned_grid,
             })
         } else {
-            let next_row = self.state.current + 1;
-
-            if next_row >= BOARD_ROWS {
-                Either::Right(Board {
-                    state: TakesTile {},
-                    grid: self.grid,
-                })
-            } else {
-                Either::Left(Board {
-                    state: ProcessesRows::new(next_row),
-                    grid: self.grid,
-                })
-            }
+            Either::Left(Board {
+                state: ProcessesRows::new(next_row),
+                grid: pruned_grid,
+            })
         }
     }
 }
