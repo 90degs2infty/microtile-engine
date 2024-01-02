@@ -246,9 +246,10 @@ mod tests {
             grid: initial_grid.into(),
         };
 
-        // Two rows are fully populated, hence we have to call `process_row` BOARD_ROWS + 2 - 1 times.
+        // Four rows are non-empty of which two rows are fully populated, hence we have to call
+        // `process_row` 4 times.
         // The last call to `process_row` will produce an Either::right value
-        for iter in 1..(BOARD_ROWS + 2) {
+        for iter in 1..4 {
             board = match board.process_row() {
                 Either::Left(board) => board,
                 _ => panic!("Board failed to continue processing after iteration {iter}"),
