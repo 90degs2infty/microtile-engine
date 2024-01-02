@@ -126,9 +126,7 @@ impl Rasterization<Passive> for Board<TakesTile> {
 }
 
 impl Board<ProcessesRows> {
-    /// Note that if there are 5 rows to check (i.e. no row is fully populated),
-    /// only 4 calls to `process_row` are necessary, as `process_row` enumerates
-    /// the transitions between rows to check (as opposed to the rows themselves).
+    /// To leave [`ProcessesRows`] state, call `process_row` once per non-empty row.
     #[must_use]
     pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
         // Note that by design, the bottom row cannot be empty when entering
