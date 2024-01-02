@@ -131,6 +131,12 @@ impl Board<ProcessesRows> {
     /// the transitions between rows to check (as opposed to the rows themselves).
     #[must_use]
     pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
+        // Note that by design, the bottom row cannot be empty when entering
+        // this function (we've just dropped a tile).
+        // Consequently, when entering this function we may always first check
+        // the current row for being fully populated (as opposed to checking it
+        // for being empty).
+
         // Check current row for being fully populated
         let fully_populated = self
             .grid
