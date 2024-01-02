@@ -198,7 +198,7 @@ fn game_one() -> Result<()> {
     overshoot_tile_to(&mut game, 0, 1)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 1)?;
 
     // Tile 2 - Line
     println!("Tile 2 - Line");
@@ -223,7 +223,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 4)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 1)?;
 
     // Tile 3 - Diagonal
     println!("Tile 3 - Diagonal");
@@ -246,7 +246,7 @@ fn game_one() -> Result<()> {
     let game = place_tile_continue(game, tile)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 6)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 4 - Square
     println!("Tile 4 - Square");
@@ -274,7 +274,7 @@ fn game_one() -> Result<()> {
     overshoot_tile_to(&mut game, 5, 2)?;
     let game = push_tile_down(game, 0)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 1)?;
 
     // Tile 5 - Line
     println!("Tile 5 - Line");
@@ -299,7 +299,7 @@ fn game_one() -> Result<()> {
     overshoot_tile_to(&mut game, 0, 1)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 1)?;
 
     // Tile 6 - Line
     println!("Tile 6 - Line");
@@ -324,7 +324,7 @@ fn game_one() -> Result<()> {
     overshoot_tile_to(&mut game, 0, 1)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 7 - Line
     println!("Tile 7 - Line");
@@ -349,7 +349,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 3)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 8 - Line
     println!("Tile 8 - Line");
@@ -372,7 +372,7 @@ fn game_one() -> Result<()> {
     let game = place_tile_continue(game, tile)?;
     let game = push_tile_down(game, 1)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 4)?;
 
     // Tile 9 - Square
     println!("Tile 9 - Square");
@@ -398,7 +398,7 @@ fn game_one() -> Result<()> {
     overshoot_tile_to(&mut game, 4, 1)?;
     let game = push_tile_down(game, 1)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 4)?;
 
     // Tile 10 - Square
     println!("Tile 10 - Square");
@@ -422,7 +422,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 0)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 4)?;
 
     // Tile 11 - Square
     println!("Tile 11 - Square");
@@ -446,7 +446,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 4)?;
     let game = push_tile_down(game, 4)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 6)?;
+    let game = process_rows(game, 4)?;
 
     // Tile 12 - Diagonal
     println!("Tile 12 - Diagonal");
@@ -471,7 +471,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 4)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 6)?;
+    let game = process_rows(game, 3)?;
 
     // Tile 13 - Line
     println!("Tile 13 - Line");
@@ -498,7 +498,7 @@ fn game_one() -> Result<()> {
     overshoot_tile_to(&mut game, 4, 3)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 14 - Square
     println!("Tile 14 - Square");
@@ -523,7 +523,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 0)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 15 - Diagonal
     println!("Tile 15 - Diagonal");
@@ -548,7 +548,7 @@ fn game_one() -> Result<()> {
     rotate_tile_valid(&mut game)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 6)?;
+    let game = process_rows(game, 3)?;
 
     // Tile 16 - Line
     println!("Tile 16 - Line");
@@ -576,7 +576,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 2)?;
     let game = push_tile_down(game, 2)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 17 - Square
     println!("Tile 17 - Square");
@@ -600,7 +600,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 3)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 18 - Line
     println!("Tile 18 - Line");
@@ -628,7 +628,7 @@ fn game_one() -> Result<()> {
     move_tile_to(&mut game, 4)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 7)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 19 - Line
     println!("Tile 19 - Line");
@@ -651,7 +651,7 @@ fn game_one() -> Result<()> {
     let game = place_tile_continue(game, tile)?;
     let game = push_tile_down(game, 3)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 2)?;
 
     // Tile 20 - Line
     println!("Tile 20 - Line");
@@ -674,7 +674,7 @@ fn game_one() -> Result<()> {
     let game = place_tile_continue(game, tile)?;
     let game = push_tile_down(game, 1)?;
     check_snapshots(&game, &active, &passive);
-    let game = process_rows(game, 5)?;
+    let game = process_rows(game, 4)?;
 
     // Tile 21 - Line
     println!("Tile 21 - Line");
