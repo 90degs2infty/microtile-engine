@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Angle {
     /// 0° in counter-clockwise order
     Zero,
@@ -10,7 +10,7 @@ pub enum Angle {
     TwoSeventy,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum BasicTile {
     /// 1x1 square
     Square,
@@ -20,7 +20,7 @@ pub enum BasicTile {
     Line,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RotatedTile<T> {
     t: T,
     a: Angle,
@@ -32,7 +32,7 @@ impl<T> RotatedTile<T> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DisplacedTile<T> {
     t: T,
     displ_x: i32,

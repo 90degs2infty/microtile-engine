@@ -20,12 +20,15 @@ mod sealed {
 
 pub trait State: sealed::Seal {}
 
+#[derive(Debug)]
 pub struct TakesTile;
 
 impl sealed::Seal for TakesTile {}
 impl State for TakesTile {}
 
+#[derive(Debug)]
 pub struct ProcessesRows {
+    /// 0-indexed, but with respect to a `Grid`'s (as opposed to `ExtGrid`'s) row count.
     current: usize,
 }
 
@@ -40,7 +43,7 @@ impl State for ProcessesRows {}
 
 impl Default for ProcessesRows {
     fn default() -> Self {
-        Self::new(1)
+        Self::new(0)
     }
 }
 
@@ -49,6 +52,7 @@ pub enum BoardError {
     InvalidPosition,
 }
 
+#[derive(Debug)]
 pub struct Board<S> {
     state: S,
     grid: ExtGrid,
@@ -103,7 +107,7 @@ impl Board<TakesTile> {
 
         Board {
             state: ProcessesRows::default(),
-            grid: self.grid.union(raster),
+            grid: self.grid.union(&raster),
         }
     }
 }
@@ -117,48 +121,68 @@ impl Default for Board<TakesTile> {
 
 impl Rasterization<Passive> for Board<TakesTile> {
     fn rasterize_buf(&self, out: &mut Grid) {
-        *out = self.grid.clone().center()
+        *out = self.grid.clone().center();
     }
 }
 
 impl Board<ProcessesRows> {
+    /// To leave [`ProcessesRows`] state, call `process_row` once per non-empty row.
     #[must_use]
     pub fn process_row(self) -> Either<Board<ProcessesRows>, Board<TakesTile>> {
-        if self.state.current > BOARD_ROWS {
-            return Either::Right(Board {
-                state: TakesTile {},
-                grid: self.grid,
-            });
-        }
+        // Note that by design, the bottom row cannot be empty when entering
+        // this function (we've just dropped a tile).
+        // Consequently, when entering this function we may always first check
+        // the current row for being fully populated (as opposed to checking it
+        // for being empty).
 
         // Check current row for being fully populated
         let fully_populated = self
             .grid
-            .contains(&Grid::ROWS[self.state.current - 1].clone().into());
+            .contains(&Grid::ROWS[self.state.current].clone().into());
+
+        let next_row;
+        let pruned_grid;
 
         // Check next row
-        if !fully_populated {
-            return Either::Left(Board {
-                state: ProcessesRows::new(self.state.current + 1),
-                grid: self.grid,
+        if fully_populated {
+            // Move all rows by one and clear the topmost row
+            let shifted = self
+                .grid
+                .center()
+                .discard_and_shift(self.state.current)
+                .expect("Row has been checked before");
+
+            // We have to recheck the current row since the row that used to be
+            // above might be fully populated, too.
+            next_row = self.state.current;
+            pruned_grid = ExtGrid::from(shifted).union(&ExtGrid::RIM);
+        } else {
+            next_row = self.state.current + 1;
+            pruned_grid = self.grid;
+        }
+
+        // Guard lookahead, so that we do not check beyond the board's extend
+        if next_row >= BOARD_ROWS {
+            return Either::Right(Board {
+                state: TakesTile {},
+                grid: pruned_grid,
             });
         }
 
-        // Move all rows by one and clear the topmost row
-        let shifted = self
-            .grid
-            .center()
-            .discard_and_shift(self.state.current - 1)
-            .expect("Row has been checked before");
-
-        // We have to recheck the current row since the row that used to be
-        // above might be fully populated, too.
-        let next_row = self.state.current;
-
-        Either::Left(Board {
-            state: ProcessesRows::new(next_row),
-            grid: ExtGrid::from(shifted).union(ExtGrid::RIM),
-        })
+        // There are no empty interleaving rows, so once we encounter an empty row, we can skip
+        // ahead
+        let next_row_empty = !pruned_grid.overlaps(&Grid::ROWS[next_row].clone().into());
+        if next_row_empty {
+            Either::Right(Board {
+                state: TakesTile {},
+                grid: pruned_grid,
+            })
+        } else {
+            Either::Left(Board {
+                state: ProcessesRows::new(next_row),
+                grid: pruned_grid,
+            })
+        }
     }
 }
 
@@ -168,7 +192,7 @@ impl Rasterization<Passive> for Board<ProcessesRows> {
             .grid
             .clone()
             .center()
-            .subtract(Grid::ROWS[self.state.current - 1].clone());
+            .subtract(&Grid::ROWS[self.state.current].clone());
     }
 }
 
@@ -178,7 +202,7 @@ impl Rasterization<Active> for Board<ProcessesRows> {
             .grid
             .clone()
             .center()
-            .intersect(Grid::ROWS[self.state.current - 1].clone())
+            .intersect(&Grid::ROWS[self.state.current].clone());
     }
 }
 
@@ -220,9 +244,10 @@ mod tests {
             grid: initial_grid.into(),
         };
 
-        // Processing all rows takes BOARD_ROWS + 2 iterations (two rows are fully) populated.
-        // The last call to `process` will produce an Either::right value
-        for iter in 1..=(BOARD_ROWS + 2) {
+        // Four rows are non-empty of which two rows are fully populated, hence we have to call
+        // `process_row` 4 times.
+        // The last call to `process_row` will produce an Either::right value
+        for iter in 1..4 {
             board = match board.process_row() {
                 Either::Left(board) => board,
                 _ => panic!("Board failed to continue processing after iteration {iter}"),
